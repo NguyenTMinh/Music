@@ -22,7 +22,6 @@ public class MyApplication extends Application {
         super.onCreate();
         mDBHelper = new MusicDBHelper(this);
         loadMusicToExternal();
-        Log.d("MinhNTn", "onCreate: Application");
     }
 
     // copy the mp3 to the external storage
@@ -31,11 +30,12 @@ public class MyApplication extends Application {
             File path = Environment.getExternalStoragePublicDirectory(
                     Environment.DIRECTORY_MUSIC);
             Field[] fields = R.raw.class.getFields();
+            Log.d("MinhNTn", "loadMusicToExternal: " + path.getPath());
             for (int i = 0; i < fields.length; i++) {
                 int id = getResources().getIdentifier(fields[i].getName(), "raw", getPackageName());
                 InputStream in = getResources().openRawResource(id);
                 try {
-                    FileOutputStream out = new FileOutputStream(path);
+                    FileOutputStream out = new FileOutputStream(path.getPath() + "/");
                     byte[] buff = new byte[1024];
                     int read = 0;
 
