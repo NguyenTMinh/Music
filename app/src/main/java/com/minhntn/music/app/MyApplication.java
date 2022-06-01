@@ -1,11 +1,13 @@
 package com.minhntn.music.app;
 
 import android.app.Application;
+import android.content.SharedPreferences;
 import android.os.Environment;
 import android.util.Log;
 
 import com.minhntn.music.R;
 import com.minhntn.music.database.MusicDBHelper;
+import com.minhntn.music.prov.MusicContacts;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -16,12 +18,16 @@ import java.lang.reflect.Field;
 
 public class MyApplication extends Application {
     private MusicDBHelper mDBHelper;
+    private SharedPreferences mSharedPreferences;
 
     @Override
     public void onCreate() {
         super.onCreate();
-        mDBHelper = new MusicDBHelper(this);
-        loadMusicToExternal();
+        mSharedPreferences = getSharedPreferences(MusicContacts.SHARED_PREF_NAME, MODE_PRIVATE);
+        if (!mSharedPreferences.getBoolean(MusicContacts.PREF_IS_CREATED, false)) {
+            mDBHelper = new MusicDBHelper(this);
+            loadMusicToExternal();
+        }
     }
 
     // copy the mp3 to the external storage
@@ -35,7 +41,9 @@ public class MyApplication extends Application {
                 int id = getResources().getIdentifier(fields[i].getName(), "raw", getPackageName());
                 InputStream in = getResources().openRawResource(id);
                 try {
-                    FileOutputStream out = new FileOutputStream(path.getPath() + "/");
+                    path.getParentFile().mkdirs();
+                    FileOutputStream out = new FileOutputStream(path.getPath() + "/" +
+                            fields[i].getName() + ".mp3");
                     byte[] buff = new byte[1024];
                     int read = 0;
 
@@ -52,6 +60,7 @@ public class MyApplication extends Application {
                 }
             }
         }
+        mDBHelper.insertValuesToTables();
     }
 
     // Check if external storage is mounted to device

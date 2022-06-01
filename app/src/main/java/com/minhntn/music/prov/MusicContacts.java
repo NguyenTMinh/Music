@@ -1,6 +1,8 @@
 package com.minhntn.music.prov;
 
 public class MusicContacts {
+    public static final String SHARED_PREF_NAME = "com.minhntn.music.prov.spref";
+    public static final String PREF_IS_CREATED = "is_created";
     public static final String MUSIC_DB_NAME = "music.db";
     public static final int MUSIC_DB_VERSION = 1;
 

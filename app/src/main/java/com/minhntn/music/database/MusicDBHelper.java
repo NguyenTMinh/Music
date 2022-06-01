@@ -9,6 +9,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.MediaMetadataRetriever;
 import android.os.Environment;
+import android.util.Log;
 
 import com.minhntn.music.R;
 import com.minhntn.music.model.Album;
@@ -17,6 +18,8 @@ import com.minhntn.music.prov.MusicContacts;
 
 import java.io.ByteArrayOutputStream;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MusicDBHelper extends SQLiteOpenHelper {
     private WeakReference<Context> mContextWeakReference;
@@ -66,27 +69,29 @@ public class MusicDBHelper extends SQLiteOpenHelper {
                 .list();
         if (files != null) {
             for (String file : files) {
-                mmr.setDataSource(path + "/" + file);
-                // Info about song
-                String songTitle = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
-                long songDuration = Long.parseLong(mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
-                String songUri = path + "/" + file;
-                String songArtist = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+                if (file.contains(".mp3")) {
+                    mmr.setDataSource(path + "/" + file);
+                    // Info about song
+                    String songTitle = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
+                    long songDuration = Long.parseLong(mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
+                    String songUri = path + "/" + file;
+                    String songArtist = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
 
-                // Info about album
-                String albumTitle = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM);
-                byte[] imageCover = mmr.getEmbeddedPicture();
-                if (imageCover == null) {
-                    Bitmap bitmap = BitmapFactory.decodeResource(mContextWeakReference.get().getResources(),
-                            R.drawable.bg_default_album_art);
-                    ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
-                    imageCover = stream.toByteArray();
-                    bitmap.recycle();
+                    // Info about album
+                    String albumTitle = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM);
+                    byte[] imageCover = mmr.getEmbeddedPicture();
+                    if (imageCover == null) {
+                        Bitmap bitmap = BitmapFactory.decodeResource(mContextWeakReference.get().getResources(),
+                                R.drawable.bg_default_album_art);
+                        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                        imageCover = stream.toByteArray();
+                        bitmap.recycle();
+                    }
+
+                    insertTB(new Song(0, songTitle, songDuration, songUri, songArtist, 0),
+                            new Album(0, albumTitle, imageCover));
                 }
-
-                insertTB(new Song(0, songTitle, songDuration, songUri, songArtist, 0),
-                        new Album(0, albumTitle, imageCover));
             }
         }
     }
@@ -121,8 +126,8 @@ public class MusicDBHelper extends SQLiteOpenHelper {
         Song song1 = getSongWithExactDetail(song);
         if (song1 == null) {
             String[] params = {song.getTitle(), String.valueOf(song.getDuration()), song.getUri().toString(),
-                    String.valueOf(tempAlbumID)};
-            database.execSQL("INSERT INTO " + MusicContacts.SONG_TABLE_NAME + " VALUES (null, ?, ?, ?, ?)",
+                    song.getmArtist(), String.valueOf(tempAlbumID)};
+            database.execSQL("INSERT INTO " + MusicContacts.SONG_TABLE_NAME + " VALUES (null, ?, ?, ?, ?, ?)",
                     params);
         }
         database.close();
@@ -140,7 +145,6 @@ public class MusicDBHelper extends SQLiteOpenHelper {
                     cursor.getBlob(2));
             cursor.moveToNext();
         }
-        database.close();
         return album;
     }
 
@@ -160,4 +164,17 @@ public class MusicDBHelper extends SQLiteOpenHelper {
         return temp;
     }
 
+    public List<Song> getAllSongs() {
+        List<Song> list = new ArrayList<>();
+        SQLiteDatabase database = getReadableDatabase();
+        Cursor cursor = database.query(MusicContacts.SONG_TABLE_NAME, null,null,
+                null, null, null, null);
+        cursor.moveToFirst();
+        while (!cursor.isAfterLast()) {
+            list.add(new Song(cursor.getInt(0), cursor.getString(1), cursor.getLong(2),
+                    cursor.getString(3), cursor.getString(4), cursor.getInt(5)));
+            cursor.moveToNext();
+        }
+        return list;
+    }
 }
