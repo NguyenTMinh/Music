@@ -1,6 +1,7 @@
 package com.minhntn.music.model;
 
 import android.net.Uri;
+import android.util.Log;
 
 public class Song {
     private int mID;
@@ -29,6 +30,14 @@ public class Song {
 
     public long getDuration() {
         return mDuration;
+    }
+
+    public String getDurationTimeFormat() {
+        int timeS = (int) (mDuration / 1000);
+        int min = (int) (timeS / 60);
+        int sec = (int) (timeS % 60);
+        Log.d("minhntn", "getDurationTimeFormat: " + timeS);
+        return String.format("%d:%d",min, sec);
     }
 
     public Uri getUri() {

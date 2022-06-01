@@ -61,6 +61,9 @@ public class MyApplication extends Application {
             }
         }
         mDBHelper.insertValuesToTables();
+        SharedPreferences.Editor editor = mSharedPreferences.edit();
+        editor.putBoolean(MusicContacts.PREF_IS_CREATED, true);
+        editor.apply();
     }
 
     // Check if external storage is mounted to device

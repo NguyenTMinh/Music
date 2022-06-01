@@ -130,7 +130,6 @@ public class MusicDBHelper extends SQLiteOpenHelper {
             database.execSQL("INSERT INTO " + MusicContacts.SONG_TABLE_NAME + " VALUES (null, ?, ?, ?, ?, ?)",
                     params);
         }
-        database.close();
     }
 
     public Album getAlbumWithExactName(String albumName) {
@@ -175,6 +174,7 @@ public class MusicDBHelper extends SQLiteOpenHelper {
                     cursor.getString(3), cursor.getString(4), cursor.getInt(5)));
             cursor.moveToNext();
         }
+        Log.d("minhntn", "getAllSongs: " + list.size());
         return list;
     }
 }

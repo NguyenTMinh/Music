@@ -31,8 +31,6 @@ public class ActivityMusic extends AppCompatActivity {
         mRVSongs = findViewById(R.id.rv_list_song);
         mRVSongs.setAdapter(mSongAdapter);
         mRVSongs.setLayoutManager(new LinearLayoutManager(this));
-
-        Log.d("minhntn", "onCreate: " + mListSong.size());
     }
 
     @Override

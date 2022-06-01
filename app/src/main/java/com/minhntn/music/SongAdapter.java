@@ -33,14 +33,14 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
     @Override
     public void onBindViewHolder(@NonNull SongViewHolder holder, int position) {
         Song song = mListSong.get(position);
-        holder.mTVOrderNumber.setText(position);
+        holder.mTVOrderNumber.setText(String.valueOf(position + 1));
         holder.mTVSongName.setText(song.getTitle());
-        holder.mTVSongTime.setText(String.valueOf(song.getDuration()));
+        holder.mTVSongTime.setText(song.getDurationTimeFormat());
     }
 
     @Override
     public int getItemCount() {
-        return 0;
+        return mListSong.size();
     }
 
     class SongViewHolder extends RecyclerView.ViewHolder {
