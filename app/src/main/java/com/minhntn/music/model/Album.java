@@ -22,4 +22,8 @@ public class Album {
     public byte[] getArt() {
         return mArt;
     }
+
+    public String info() {
+        return mID + ", " + mName + ", ";
+    }
 }

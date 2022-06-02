@@ -51,4 +51,8 @@ public class Song {
     public String getmArtist() {
         return mArtist;
     }
+
+    public String info() {
+        return mID + ", " + mTitle + ", " + mDuration + ", " + mUri + ", " + mArtist + ", " + mAlbumID;
+    }
 }

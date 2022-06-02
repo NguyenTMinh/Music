@@ -6,6 +6,8 @@ public class MusicContacts {
     public static final String MUSIC_DB_NAME = "music.db";
     public static final int MUSIC_DB_VERSION = 1;
 
+    public static final String VIEW_JOIN_FOR_NOW_PLAY = "A";
+
     // Table: Song
     public static final String SONG_TABLE_NAME = "song";
     public static final String SONG_COLUMN_ID = "id";

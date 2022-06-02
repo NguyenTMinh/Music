@@ -24,10 +24,11 @@ public class MyApplication extends Application {
     public void onCreate() {
         super.onCreate();
         mSharedPreferences = getSharedPreferences(MusicContacts.SHARED_PREF_NAME, MODE_PRIVATE);
+        mDBHelper = new MusicDBHelper(this);
         if (!mSharedPreferences.getBoolean(MusicContacts.PREF_IS_CREATED, false)) {
-            mDBHelper = new MusicDBHelper(this);
             loadMusicToExternal();
         }
+        mDBHelper.loadDataFromMedia();
     }
 
     // copy the mp3 to the external storage
@@ -36,7 +37,6 @@ public class MyApplication extends Application {
             File path = Environment.getExternalStoragePublicDirectory(
                     Environment.DIRECTORY_MUSIC);
             Field[] fields = R.raw.class.getFields();
-            Log.d("MinhNTn", "loadMusicToExternal: " + path.getPath());
             for (int i = 0; i < fields.length; i++) {
                 int id = getResources().getIdentifier(fields[i].getName(), "raw", getPackageName());
                 InputStream in = getResources().openRawResource(id);
@@ -60,7 +60,6 @@ public class MyApplication extends Application {
                 }
             }
         }
-        mDBHelper.insertValuesToTables();
         SharedPreferences.Editor editor = mSharedPreferences.edit();
         editor.putBoolean(MusicContacts.PREF_IS_CREATED, true);
         editor.apply();

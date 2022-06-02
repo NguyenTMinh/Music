@@ -1,6 +1,8 @@
 package com.minhntn.music;
 
 import android.content.Context;
+import android.graphics.Typeface;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,6 +11,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.minhntn.music.interf.ICallBack;
 import com.minhntn.music.model.Song;
 
 import java.util.List;
@@ -16,10 +19,13 @@ import java.util.List;
 public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder> {
     private List<Song> mListSong;
     private Context mContext;
+    private ICallBack mICallBack;
+    private int index = -1;
 
-    public SongAdapter(List<Song> mListSong, Context mContext) {
+    public SongAdapter(List<Song> mListSong, Context mContext, ICallBack iCallBack) {
         this.mListSong = mListSong;
         this.mContext = mContext;
+        mICallBack = iCallBack;
     }
 
     @NonNull
@@ -36,6 +42,7 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
         holder.mTVOrderNumber.setText(String.valueOf(position + 1));
         holder.mTVSongName.setText(song.getTitle());
         holder.mTVSongTime.setText(song.getDurationTimeFormat());
+
     }
 
     @Override
@@ -43,7 +50,7 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
         return mListSong.size();
     }
 
-    class SongViewHolder extends RecyclerView.ViewHolder {
+    public class SongViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         TextView mTVOrderNumber;
         TextView mTVSongName;
         TextView mTVSongTime;
@@ -53,7 +60,18 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
             mTVOrderNumber = itemView.findViewById(R.id.tv_order_number);
             mTVSongName = itemView.findViewById(R.id.tv_song_name);
             mTVSongTime = itemView.findViewById(R.id.tv_song_time);
+            itemView.setOnClickListener(this);
         }
 
+        @Override
+        public void onClick(View v) {
+            mICallBack.displayNowPlayingView(mListSong.get(getAdapterPosition()), index);
+
+            mTVOrderNumber.setText("");
+            mTVOrderNumber.setBackgroundResource(R.drawable.ic_now_playing);
+            mTVSongName.setTypeface(null, Typeface.BOLD);
+
+            index = getAdapterPosition();
+        }
     }
 }
