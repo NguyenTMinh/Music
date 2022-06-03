@@ -43,7 +43,7 @@ public class MusicDBHelper extends SQLiteOpenHelper {
 
         // Create album table
         String queryCreateAlbumTable = "CREATE TABLE " + MusicContacts.ALBUM_TABLE_NAME + "(" +
-                MusicContacts.ALBUM_COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
+                MusicContacts.ALBUM_COLUMN_ID + " INTEGER PRIMARY KEY," +
                 MusicContacts.ALBUM_COLUMN_NAME + " TEXT NOT NULL," +
                 MusicContacts.ALBUM_COLUMN_ART + " BLOB" + ")";
 
@@ -99,7 +99,6 @@ public class MusicDBHelper extends SQLiteOpenHelper {
     }*/
 
     /**
-     *
      * @param song
      * @param album
      */
@@ -123,8 +122,8 @@ public class MusicDBHelper extends SQLiteOpenHelper {
         }
 
         /* Insert new value to song table
-        * But first check the exist of row
-        * */
+         * But first check the exist of row
+         * */
         Song song1 = getSongWithExactDetail(song);
         if (song1 == null) {
             String[] params = {String.valueOf(song.getID()), song.getTitle(), String.valueOf(song.getDuration()), song.getUri().toString(),
@@ -138,7 +137,7 @@ public class MusicDBHelper extends SQLiteOpenHelper {
         Album album = null;
         SQLiteDatabase database = getReadableDatabase();
         Cursor cursor = database.query(MusicContacts.ALBUM_TABLE_NAME, null,
-                 MusicContacts.ALBUM_COLUMN_NAME + " = ?", new String[]{albumName},
+                MusicContacts.ALBUM_COLUMN_NAME + " = ?", new String[]{albumName},
                 null, null, null);
         cursor.moveToFirst();
         while (!cursor.isAfterLast()) {
@@ -167,7 +166,7 @@ public class MusicDBHelper extends SQLiteOpenHelper {
     public List<Song> getAllSongs() {
         List<Song> list = new ArrayList<>();
         SQLiteDatabase database = getReadableDatabase();
-        Cursor cursor = database.query(MusicContacts.SONG_TABLE_NAME, null,null,
+        Cursor cursor = database.query(MusicContacts.SONG_TABLE_NAME, null, null,
                 null, null, null, null);
         cursor.moveToFirst();
         while (!cursor.isAfterLast()) {
@@ -197,19 +196,17 @@ public class MusicDBHelper extends SQLiteOpenHelper {
         cursor.moveToFirst();
         while (!cursor.isAfterLast()) {
             int songID = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID));
-//            String songTitle = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE));
-//            long songDuration = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION));
             String songUri = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA));
-//            String artistName = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST));
+
+            String songTitle2 = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE));
+            long songDuration2 = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION));
+            String artistName2 = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST));
             int albumId = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID));
-//            String albumName = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM));
+            String albumName2 = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM));
+
 
             MediaMetadataRetriever mmr = new MediaMetadataRetriever();
             mmr.setDataSource(songUri);
-            String artistName = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
-            String songTitle = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
-            long songDuration = Long.parseLong(mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
-            String albumName = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM);
 
             byte[] imageCover = mmr.getEmbeddedPicture();
             if (imageCover == null) {
@@ -221,8 +218,8 @@ public class MusicDBHelper extends SQLiteOpenHelper {
                 bitmap.recycle();
             }
 
-            Song song = new Song(songID, songTitle, songDuration, songUri, artistName, 0);
-            Album album = new Album(0, albumName, imageCover);
+            Song song = new Song(songID, songTitle2, songDuration2, songUri, artistName2, albumId);
+            Album album = new Album(albumId, albumName2, imageCover);
             insertTB(song, album);
 
 
@@ -235,7 +232,7 @@ public class MusicDBHelper extends SQLiteOpenHelper {
         String queryJoin = "SELECT " + MusicContacts.ALBUM_TABLE_NAME + "." + MusicContacts.ALBUM_COLUMN_NAME + ", " +
                 MusicContacts.ALBUM_COLUMN_ART + ", " + MusicContacts.ALBUM_TABLE_NAME + "." + MusicContacts.ALBUM_COLUMN_ID +
                 " FROM " + MusicContacts.SONG_TABLE_NAME + " JOIN " + MusicContacts.ALBUM_TABLE_NAME +
-                 " WHERE " + MusicContacts.SONG_TABLE_NAME + "." + MusicContacts.SONG_COLUMN_ALBUM_ID + " = " +
+                " WHERE " + MusicContacts.SONG_TABLE_NAME + "." + MusicContacts.SONG_COLUMN_ALBUM_ID + " = " +
                 MusicContacts.ALBUM_TABLE_NAME + "." + MusicContacts.ALBUM_COLUMN_ID + " AND " + MusicContacts.SONG_TABLE_NAME +
                 "." + MusicContacts.SONG_COLUMN_ID + " = " + songID;
         return database.rawQuery(queryJoin, null);

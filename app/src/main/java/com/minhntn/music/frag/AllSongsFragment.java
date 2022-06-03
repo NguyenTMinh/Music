@@ -101,6 +101,10 @@ public class AllSongsFragment extends Fragment implements ICallBack {
         mListSong = list;
     }
 
+    public void notifyAdapter() {
+        mSongAdapter.notifyDataSetChanged();
+    }
+
     class DBAsyncTask extends AsyncTask<Integer, Void, Cursor> {
 
         @Override
@@ -115,7 +119,6 @@ public class AllSongsFragment extends Fragment implements ICallBack {
             ImageView cover = mNowPlayingView.findViewById(R.id.iv_album_cover);
 
             cursor.moveToFirst();
-            int albumID = cursor.getInt(2);
             String albumName = cursor.getString(0);
             byte[] albumCover = cursor.getBlob(1);
 
