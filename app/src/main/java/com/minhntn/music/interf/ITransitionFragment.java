@@ -5,4 +5,5 @@ import com.minhntn.music.model.Song;
 
 public interface ITransitionFragment {
     void transition(Song song);
+    void hideActionBar();
 }

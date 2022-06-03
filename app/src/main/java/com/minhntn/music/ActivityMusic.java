@@ -73,22 +73,9 @@ public class ActivityMusic extends AppCompatActivity implements ITransitionFragm
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == REQUEST_CODE) {
             if (grantResults.length >0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                fetchSongs();
+                new FetchAsyncTask().execute();
             }
         }
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        fetchSongs();
-    }
-
-    private void fetchSongs() {
-        mMusicDBHelper.loadDataFromMedia();
-        mListSong = mMusicDBHelper.getAllSongs();
-        mListAlbum = mMusicDBHelper.getAllAlbums();
-        mAllSongsFragment.notifyAdapter();
     }
 
     public MusicDBHelper getMusicDBHelper() {
@@ -97,7 +84,7 @@ public class ActivityMusic extends AppCompatActivity implements ITransitionFragm
 
     @Override
     public void transition(Song song) {
-        MediaPlaybackFragment mediaPlaybackFragment = new MediaPlaybackFragment();
+        MediaPlaybackFragment mediaPlaybackFragment = new MediaPlaybackFragment(song);
         Bundle bundle = new Bundle();
         byte[] cover = new byte[1];
         for (int i =0; i < mListAlbum.size(); i++) {
@@ -110,5 +97,35 @@ public class ActivityMusic extends AppCompatActivity implements ITransitionFragm
         mediaPlaybackFragment.setArguments(bundle);
         getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mediaPlaybackFragment)
                 .addToBackStack("").commit();
+    }
+
+    @Override
+    public void hideActionBar() {
+        getSupportActionBar().hide();
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (!getSupportActionBar().isShowing()) {
+            getSupportActionBar().show();
+        }
+        super.onBackPressed();
+    }
+
+    class FetchAsyncTask extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            mMusicDBHelper.loadDataFromMedia();
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void unused) {
+            super.onPostExecute(unused);
+            mListSong = mMusicDBHelper.getAllSongs();
+            mListAlbum = mMusicDBHelper.getAllAlbums();
+            mAllSongsFragment.notifyAdapter();
+        }
     }
 }

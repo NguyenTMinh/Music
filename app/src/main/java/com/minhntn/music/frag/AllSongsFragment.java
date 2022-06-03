@@ -11,8 +11,10 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.ToggleButton;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -31,7 +33,6 @@ import com.minhntn.music.model.Song;
 import java.util.List;
 
 public class AllSongsFragment extends Fragment implements ICallBack {
-
     private View mRootView;
     private RecyclerView mRVSongs;
     private SongAdapter mSongAdapter;
@@ -92,6 +93,7 @@ public class AllSongsFragment extends Fragment implements ICallBack {
 
         mNowPlayingView.setVisibility(View.VISIBLE);
         TextView name = mNowPlayingView.findViewById(R.id.tv_song_name_now_playing);
+        ToggleButton buttonPlay = mNowPlayingView.findViewById(R.id.toggle_play_pause);
         name.setText(song.getTitle());
         new DBAsyncTask().execute(song.getID());
         mCurrentSong = song;
@@ -114,7 +116,6 @@ public class AllSongsFragment extends Fragment implements ICallBack {
 
         @Override
         protected void onPostExecute(Cursor cursor) {
-
             TextView album = mNowPlayingView.findViewById(R.id.tv_song_album_now_playing);
             ImageView cover = mNowPlayingView.findViewById(R.id.iv_album_cover);
 

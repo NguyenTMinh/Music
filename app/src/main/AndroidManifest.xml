@@ -9,6 +9,7 @@
         tools:ignore="QueryAllPackagesPermission" />
 
     <application
+        android:name=".app.MyApplication"
         android:requestLegacyExternalStorage="true"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
