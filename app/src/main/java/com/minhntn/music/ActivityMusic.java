@@ -4,10 +4,12 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.Manifest;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -24,18 +26,34 @@ import com.minhntn.music.database.MusicDBHelper;
 import com.minhntn.music.frag.AllSongsFragment;
 import com.minhntn.music.frag.MediaPlaybackFragment;
 import com.minhntn.music.interf.ICallBack;
+import com.minhntn.music.interf.IDoInAsyncTask;
 import com.minhntn.music.interf.ITransitionFragment;
 import com.minhntn.music.model.Album;
 import com.minhntn.music.model.Song;
 
 import java.util.List;
 
-public class ActivityMusic extends AppCompatActivity implements ITransitionFragment {
+public class ActivityMusic extends AppCompatActivity implements ITransitionFragment, MyBroadcastReceiver.IDoOnLoadDone {
     private static final int REQUEST_CODE = 1;
     private List<Song> mListSong;
     private List<Album> mListAlbum;
     private MusicDBHelper mMusicDBHelper;
     private AllSongsFragment mAllSongsFragment;
+    private MyBroadcastReceiver mBroadcastReceiver;
+
+    private IDoInAsyncTask mIDoInAsyncTask = new IDoInAsyncTask() {
+        @Override
+        public void doInBackground() {
+            mMusicDBHelper.loadDataFromMedia();
+        }
+
+        @Override
+        public void onPostExecute() {
+            mListSong = mMusicDBHelper.getAllSongs();
+            mListAlbum = mMusicDBHelper.getAllAlbums();
+            mAllSongsFragment.notifyAdapter(mListSong);
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,6 +69,12 @@ public class ActivityMusic extends AppCompatActivity implements ITransitionFragm
         mAllSongsFragment.setListSong(mListSong);
         getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mAllSongsFragment,
                 null).commit();
+
+        mBroadcastReceiver = new MyBroadcastReceiver(this);
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(MyBroadcastReceiver.ACTION_LOAD_DONE);
+        LocalBroadcastManager.getInstance(this)
+                .registerReceiver(mBroadcastReceiver, intentFilter);
 
     }
 
@@ -73,7 +97,7 @@ public class ActivityMusic extends AppCompatActivity implements ITransitionFragm
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == REQUEST_CODE) {
             if (grantResults.length >0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                new FetchAsyncTask().execute();
+                new MyAsyncTask().execute(mIDoInAsyncTask);
             }
         }
     }
@@ -112,20 +136,15 @@ public class ActivityMusic extends AppCompatActivity implements ITransitionFragm
         super.onBackPressed();
     }
 
-    class FetchAsyncTask extends AsyncTask<Void, Void, Void> {
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        LocalBroadcastManager.getInstance(this)
+                .unregisterReceiver(mBroadcastReceiver);
+    }
 
-        @Override
-        protected Void doInBackground(Void... voids) {
-            mMusicDBHelper.loadDataFromMedia();
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void unused) {
-            super.onPostExecute(unused);
-            mListSong = mMusicDBHelper.getAllSongs();
-            mListAlbum = mMusicDBHelper.getAllAlbums();
-            mAllSongsFragment.notifyAdapter();
-        }
+    @Override
+    public void doOnLoadDone() {
+        mIDoInAsyncTask.onPostExecute();
     }
 }

@@ -2,7 +2,6 @@ package com.minhntn.music;
 
 import android.content.Context;
 import android.graphics.Typeface;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -68,7 +67,7 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
             mICallBack.displayNowPlayingView(mListSong.get(getAdapterPosition()), index);
 
             mTVOrderNumber.setText("");
-            mTVOrderNumber.setBackgroundResource(R.drawable.ic_now_playing);
+            mTVOrderNumber.setBackgroundResource(R.drawable.ic_now_playing_png);
             mTVSongName.setTypeface(null, Typeface.BOLD);
 
             index = getAdapterPosition();

@@ -30,6 +30,7 @@ import com.minhntn.music.interf.ITransitionFragment;
 import com.minhntn.music.model.Album;
 import com.minhntn.music.model.Song;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class AllSongsFragment extends Fragment implements ICallBack {
@@ -103,7 +104,9 @@ public class AllSongsFragment extends Fragment implements ICallBack {
         mListSong = list;
     }
 
-    public void notifyAdapter() {
+    public void notifyAdapter(List<Song> list) {
+        mListSong.clear();
+        mListSong.addAll(list);
         mSongAdapter.notifyDataSetChanged();
     }
 

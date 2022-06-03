@@ -28,7 +28,7 @@
         </activity>
 
         <service android:name=".serv.MediaPlaybackService" />
-
+        <receiver android:name=".MyBroadcastReceiver" />
     </application>
 
 

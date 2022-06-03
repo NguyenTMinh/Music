@@ -59,46 +59,6 @@ public class MusicDBHelper extends SQLiteOpenHelper {
     }
 
     /**
-     * This method is used to get the infos needed then save them to database
-     * and may use only once when app first installed in order to copy the data to database
-     * manually get data from file with mediaMetaRetriever
-     */
-    /*public void insertValuesToTables() {
-        MediaMetadataRetriever mmr = new MediaMetadataRetriever();
-        String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC)
-                .getPath();
-        String[] files = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC)
-                .list();
-        if (files != null) {
-            for (String file : files) {
-                if (file.contains(".mp3")) {
-                    mmr.setDataSource(path + "/" + file);
-                    // Info about song
-                    String songTitle = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
-                    long songDuration = Long.parseLong(mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
-                    String songUri = path + "/" + file;
-                    String songArtist = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
-
-                    // Info about album
-                    String albumTitle = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM);
-                    byte[] imageCover = mmr.getEmbeddedPicture();
-                    if (imageCover == null) {
-                        Bitmap bitmap = BitmapFactory.decodeResource(mContextWeakReference.get().getResources(),
-                                R.drawable.bg_default_album_art);
-                        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
-                        imageCover = stream.toByteArray();
-                        bitmap.recycle();
-                    }
-
-                    insertTB(new Song(0, songTitle, songDuration, songUri, songArtist, 0),
-                            new Album(0, albumTitle, imageCover));
-                }
-            }
-        }
-    }*/
-
-    /**
      * @param song
      * @param album
      */
