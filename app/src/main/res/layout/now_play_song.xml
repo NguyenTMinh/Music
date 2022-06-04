@@ -5,7 +5,7 @@
     android:background="@drawable/shadow_outline_background"
     android:orientation="horizontal"
     android:padding="8dp"
-    android:weightSum="11">
+    android:weightSum="12">
 
     <ImageView
         android:src="@drawable/bg_default_album_art"
@@ -17,7 +17,7 @@
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="7"
+        android:layout_weight="8"
         android:orientation="vertical">
 
         <TextView

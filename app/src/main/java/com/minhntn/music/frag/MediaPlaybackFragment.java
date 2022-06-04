@@ -22,6 +22,7 @@ import com.minhntn.music.model.Song;
 
 public class MediaPlaybackFragment extends Fragment {
     public static final String KEY_COVER = "KEY_COVER";
+    public static final String KEY_ALBUM_NAME = "KEY_ALBUM_NAME";
     private View mRootView;
     private ImageView mIVBackground;
     private ImageView mIVAlbumCoverHead;
@@ -60,10 +61,11 @@ public class MediaPlaybackFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         byte[] cover = getArguments().getByteArray(KEY_COVER);
+        String alName = getArguments().getString(KEY_ALBUM_NAME);
         Bitmap bitmap = BitmapFactory.decodeByteArray(cover, 0, cover.length);
         Glide.with(getContext()).load(bitmap).into(mIVBackground);
         Glide.with(getContext()).load(bitmap).into(mIVAlbumCoverHead);
         mTVSongNameHead.setText(mCurrentSong.getTitle());
-
+        mTVSongAlbumHead.setText(alName);
     }
 }

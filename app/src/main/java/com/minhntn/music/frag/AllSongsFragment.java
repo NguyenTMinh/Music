@@ -89,13 +89,19 @@ public class AllSongsFragment extends Fragment implements ICallBack {
                 textView.setText(String.valueOf(position + 1));
                 textView.setBackgroundResource(0);
                 textView1.setTypeface(null, Typeface.NORMAL);
+            } else {
+                Log.d("MinhNTn", "onBindViewHolder: click" + position);
+                mSongAdapter.setPreIndex(position);
             }
         }
 
+        int lengthAllow = getResources().getInteger(R.integer.length_in_line);
         mNowPlayingView.setVisibility(View.VISIBLE);
         TextView name = mNowPlayingView.findViewById(R.id.tv_song_name_now_playing);
         ToggleButton buttonPlay = mNowPlayingView.findViewById(R.id.toggle_play_pause);
-        name.setText(song.getTitle());
+
+        String nameDisplay = (song.getTitle().length() < lengthAllow)? song.getTitle() : song.getTitle().substring(0, lengthAllow - 3) + "..";
+        name.setText(nameDisplay);
         new DBAsyncTask().execute(song.getID());
         mCurrentSong = song;
     }
@@ -126,10 +132,12 @@ public class AllSongsFragment extends Fragment implements ICallBack {
             String albumName = cursor.getString(0);
             byte[] albumCover = cursor.getBlob(1);
 
+            int lengthAllow = getResources().getInteger(R.integer.length_in_line);
             Bitmap bitmap = BitmapFactory.decodeByteArray(albumCover, 0, albumCover.length);
+            String albumDisplay = (albumName.length() <= lengthAllow)? albumName : albumName.substring(0, lengthAllow - 3) + "..";
 
             cover.setImageBitmap(bitmap);
-            album.setText(albumName);
+            album.setText(albumDisplay);
         }
     }
 

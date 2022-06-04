@@ -111,13 +111,16 @@ public class ActivityMusic extends AppCompatActivity implements ITransitionFragm
         MediaPlaybackFragment mediaPlaybackFragment = new MediaPlaybackFragment(song);
         Bundle bundle = new Bundle();
         byte[] cover = new byte[1];
+        String albumName = "";
         for (int i =0; i < mListAlbum.size(); i++) {
             if (song.getAlbumID() == mListAlbum.get(i).getID()) {
                 cover = mListAlbum.get(i).getArt();
+                albumName = mListAlbum.get(i).getName();
                 break;
             }
         }
         bundle.putByteArray(MediaPlaybackFragment.KEY_COVER, cover);
+        bundle.putString(MediaPlaybackFragment.KEY_ALBUM_NAME, albumName);
         mediaPlaybackFragment.setArguments(bundle);
         getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mediaPlaybackFragment)
                 .addToBackStack("").commit();

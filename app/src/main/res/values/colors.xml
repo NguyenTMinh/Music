@@ -11,4 +11,5 @@
 
     <color name="colorPrimary">#FF5722</color>
     <color name="colorPrimaryVariant">#bd4200</color>
+    <color name="gray_transparent">#70979594</color>
 </resources>
