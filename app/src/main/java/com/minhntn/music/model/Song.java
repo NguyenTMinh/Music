@@ -1,9 +1,11 @@
 package com.minhntn.music.model;
 
 import android.net.Uri;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.util.Log;
 
-public class Song {
+public class Song implements Parcelable {
     private int mID;
     private String mTitle;
     private long mDuration;
@@ -19,6 +21,27 @@ public class Song {
         this.mArtist = mArtist;
         this.mAlbumID = mAlbumID;
     }
+
+    protected Song(Parcel in) {
+        mID = in.readInt();
+        mTitle = in.readString();
+        mDuration = in.readLong();
+        mUri = in.readString();
+        mAlbumID = in.readInt();
+        mArtist = in.readString();
+    }
+
+    public static final Creator<Song> CREATOR = new Creator<Song>() {
+        @Override
+        public Song createFromParcel(Parcel in) {
+            return new Song(in);
+        }
+
+        @Override
+        public Song[] newArray(int size) {
+            return new Song[size];
+        }
+    };
 
     public int getID() {
         return mID;
@@ -53,5 +76,20 @@ public class Song {
 
     public String info() {
         return mID + ", " + mTitle + ", " + mDuration + ", " + mUri + ", " + mArtist + ", " + mAlbumID;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(mID);
+        dest.writeString(mTitle);
+        dest.writeLong(mDuration);
+        dest.writeString(mUri);
+        dest.writeInt(mAlbumID);
+        dest.writeString(mArtist);
     }
 }

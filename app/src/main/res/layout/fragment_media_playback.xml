@@ -5,9 +5,9 @@
     android:layout_height="match_parent">
 
     <ImageView
-        android:scaleType="fitXY"
+        android:scaleType="fitCenter"
         android:id="@+id/iv_album_cover_large"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="match_parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -84,85 +84,113 @@
 
 
     <RelativeLayout
-        android:background="@color/gray_transparent"
-        android:id="@+id/layout_below"
+        app:layout_constraintBottom_toBottomOf="parent"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/now_play_bottom"
-        app:layout_constraintBottom_toBottomOf="parent">
+        android:layout_height="120dp">
+
+        <RelativeLayout
+            android:layout_alignParentBottom="true"
+            android:id="@+id/layout_below"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/now_play_bottom"
+            android:background="@color/gray_transparent"
+            app:layout_constraintBottom_toBottomOf="parent">
+
+            <ToggleButton
+                android:id="@+id/toggle_play_pause_bottom"
+                android:layout_width="65dp"
+                android:layout_height="70dp"
+                android:layout_alignParentBottom="true"
+                android:layout_centerHorizontal="true"
+                android:layout_marginBottom="8dp"
+                android:background="@drawable/ic_fab_play_btn_normal"
+                android:textOff=""
+                android:textOn="" />
+
+            <ImageButton
+                android:id="@+id/bt_fwd"
+                android:layout_width="40dp"
+                android:layout_height="45dp"
+                android:layout_alignParentBottom="true"
+                android:layout_marginStart="16dp"
+                android:layout_marginBottom="20dp"
+                android:layout_toEndOf="@id/toggle_play_pause_bottom"
+                android:background="@android:color/transparent"
+                android:scaleType="centerCrop"
+                android:scaleX="0.8"
+                android:scaleY="0.8"
+                android:src="@drawable/ic_fwd_dark" />
+
+            <ImageButton
+                android:id="@+id/bt_rew"
+                android:layout_width="40dp"
+                android:layout_height="45dp"
+                android:layout_alignParentBottom="true"
+                android:layout_marginEnd="16dp"
+                android:layout_marginBottom="20dp"
+                android:layout_toStartOf="@id/toggle_play_pause_bottom"
+                android:background="@android:color/transparent"
+                android:scaleType="centerCrop"
+                android:scaleX="0.8"
+                android:scaleY="0.8"
+                android:src="@drawable/ic_rew_dark" />
+
+            <ToggleButton
+                android:id="@+id/toggle_like"
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:layout_alignParentBottom="true"
+                android:layout_marginEnd="32dp"
+                android:layout_marginBottom="25dp"
+                android:layout_toStartOf="@id/bt_rew"
+                android:background="@drawable/button_thumb_up"
+                android:textOff=""
+                android:textOn="" />
+
+            <ToggleButton
+                android:id="@+id/toggle_dislike"
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:layout_alignParentBottom="true"
+                android:layout_marginStart="32dp"
+                android:layout_marginBottom="25dp"
+                android:layout_toEndOf="@id/bt_fwd"
+                android:background="@drawable/button_thumb_down"
+                android:textOff=""
+                android:textOn="" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:text="@string/_0_00"
+                android:id="@+id/tv_song_duration_below"
+                android:layout_alignParentEnd="true"
+                android:layout_marginEnd="8dp"
+                android:layout_marginTop="8dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:text="@string/_0_00"
+                android:id="@+id/tv_song_time_current_below"
+                android:layout_alignParentStart="true"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"/>
+
+        </RelativeLayout>
 
         <SeekBar
+            android:paddingStart="0dp"
+            android:paddingEnd="0dp"
             android:id="@+id/sb_progress"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_alignParentTop="true"
+            android:layout_alignTop="@id/layout_below"
+            android:layout_marginTop="-10dp"
             android:progressTint="@color/colorPrimary"
             android:thumbTint="@color/colorPrimary" />
-
-        <ToggleButton
-            android:id="@+id/toggle_play_pause_bottom"
-            android:layout_width="65dp"
-            android:layout_height="70dp"
-            android:layout_centerHorizontal="true"
-            android:layout_alignParentBottom="true"
-            android:layout_marginBottom="8dp"
-            android:background="@drawable/ic_fab_play_btn_normal"
-            android:textOff=""
-            android:textOn="" />
-
-        <ImageButton
-            android:background="@android:color/transparent"
-            android:scaleY="0.8"
-            android:scaleX="0.8"
-            android:id="@+id/bt_fwd"
-            android:layout_width="40dp"
-            android:layout_height="45dp"
-            android:layout_alignParentBottom="true"
-            android:layout_marginStart="16dp"
-            android:layout_marginBottom="20dp"
-            android:layout_toEndOf="@id/toggle_play_pause_bottom"
-            android:scaleType="centerCrop"
-            android:src="@drawable/ic_fwd_dark" />
-
-        <ImageButton
-            android:scaleX="0.8"
-            android:scaleY="0.8"
-            android:id="@+id/bt_rew"
-            android:layout_width="40dp"
-            android:layout_height="45dp"
-            android:layout_alignParentBottom="true"
-            android:layout_marginEnd="16dp"
-            android:layout_marginBottom="20dp"
-            android:layout_toStartOf="@id/toggle_play_pause_bottom"
-            android:background="@android:color/transparent"
-            android:scaleType="centerCrop"
-            android:src="@drawable/ic_rew_dark" />
-
-        <ToggleButton
-            android:id="@+id/toggle_like"
-            android:layout_width="35dp"
-            android:layout_height="35dp"
-            android:layout_alignParentBottom="true"
-            android:layout_marginEnd="32dp"
-            android:layout_marginBottom="25dp"
-            android:layout_toStartOf="@id/bt_rew"
-            android:background="@drawable/button_thumb_up"
-            android:textOff=""
-            android:textOn=""/>
-
-        <ToggleButton
-            android:id="@+id/toggle_dislike"
-            android:layout_width="35dp"
-            android:layout_height="35dp"
-            android:layout_alignParentBottom="true"
-            android:layout_marginStart="32dp"
-            android:layout_marginBottom="25dp"
-            android:layout_toEndOf="@id/bt_fwd"
-            android:background="@drawable/button_thumb_down"
-            android:textOff=""
-            android:textOn=""/>
-
     </RelativeLayout>
-
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>

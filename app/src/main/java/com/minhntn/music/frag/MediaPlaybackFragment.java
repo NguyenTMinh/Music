@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,6 +24,7 @@ import com.minhntn.music.model.Song;
 public class MediaPlaybackFragment extends Fragment {
     public static final String KEY_COVER = "KEY_COVER";
     public static final String KEY_ALBUM_NAME = "KEY_ALBUM_NAME";
+    private static final String KEY_PARCEL = "KEY_PARCEL";
     private View mRootView;
     private ImageView mIVBackground;
     private ImageView mIVAlbumCoverHead;
@@ -31,6 +33,8 @@ public class MediaPlaybackFragment extends Fragment {
 
     private Song mCurrentSong;
     private ITransitionFragment mITransitionFragment;
+
+    public MediaPlaybackFragment() {}
 
     public MediaPlaybackFragment(Song song) {
         super();
@@ -48,6 +52,9 @@ public class MediaPlaybackFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        if (savedInstanceState != null){
+            mCurrentSong = savedInstanceState.getParcelable(KEY_PARCEL);
+        }
         mITransitionFragment.hideActionBar();
         mRootView = inflater.inflate(R.layout.fragment_media_playback, container, false);
         mIVBackground = mRootView.findViewById(R.id.iv_album_cover_large);
@@ -67,5 +74,23 @@ public class MediaPlaybackFragment extends Fragment {
         Glide.with(getContext()).load(bitmap).into(mIVAlbumCoverHead);
         mTVSongNameHead.setText(mCurrentSong.getTitle());
         mTVSongAlbumHead.setText(alName);
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putParcelable(KEY_PARCEL, mCurrentSong);
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        Log.d("MinhNTn", "onDestroyView: ");
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.d("MinhNTn", "onDestroy: ");
     }
 }
