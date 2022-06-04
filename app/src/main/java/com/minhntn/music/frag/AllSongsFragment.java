@@ -90,8 +90,12 @@ public class AllSongsFragment extends Fragment implements ICallBack {
                 textView.setBackgroundResource(0);
                 textView1.setTypeface(null, Typeface.NORMAL);
             } else {
-                Log.d("MinhNTn", "onBindViewHolder: click" + position);
-                mSongAdapter.setPreIndex(position);
+//                Log.d("MinhNTn", "onBindViewHolder: click" + position);
+//                mSongAdapter.setPreIndex(position);
+                Song temp = new Song(song.getID(), song.getTitle(), song.getDuration(), song.getUri().getPath(),
+                        song.getmArtist(), song.getAlbumID());
+                mListSong.set(position, temp);
+                mSongAdapter.notifyItemChanged(position);
             }
         }
 
