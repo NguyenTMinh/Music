@@ -119,6 +119,9 @@ public class ActivityMusic extends AppCompatActivity implements ITransitionFragm
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container_1, mAllSongsFragment,
                     AllSongsFragment.FRAGMENT_TAG).commit();
             if (savedInstanceState != null) {
+                if (!getSupportActionBar().isShowing()) {
+                    getSupportActionBar().show();
+                }
                 if (mIndexCurrentSong != -1) {
                     transition(mIndexCurrentSong);
                 }
