@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@drawable/indicator_playing_peak_meter_9"
+        android:width="5dp"
+        android:height="20dp"
+        android:right="2dp"/>
+    <item android:drawable="@drawable/indicator_playing_peak_meter_12"
+        android:width="5dp"
+        android:height="20dp"
+        android:left="7dp"
+        android:right="7dp"/>
+    <item android:drawable="@drawable/indicator_playing_peak_meter_6"
+        android:width="5dp"
+        android:height="20dp"
+        android:left="14dp"/>
+</layer-list>

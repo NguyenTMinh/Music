@@ -12,6 +12,7 @@ public class Song implements Parcelable {
     private String mUri;
     private int mAlbumID;
     private String mArtist;
+    private boolean isPlaying;
 
     public Song(int mID, String mTitle, long mDuration, String mUri, String mArtist, int mAlbumID) {
         this.mID = mID;
@@ -76,6 +77,14 @@ public class Song implements Parcelable {
 
     public String info() {
         return mID + ", " + mTitle + ", " + mDuration + ", " + mUri + ", " + mArtist + ", " + mAlbumID;
+    }
+
+    public boolean isPlaying() {
+        return isPlaying;
+    }
+
+    public void setPlaying(boolean playing) {
+        isPlaying = playing;
     }
 
     @Override

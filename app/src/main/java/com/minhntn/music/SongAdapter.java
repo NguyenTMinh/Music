@@ -23,7 +23,6 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
     private Context mContext;
     private ICallBack mICallBack;
     private int index = -1;
-    private int mPreIndex = -1;
 
     public SongAdapter(List<Song> mListSong, Context mContext, ICallBack iCallBack) {
         this.mListSong = mListSong;
@@ -43,12 +42,15 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
     public void onBindViewHolder(@NonNull SongViewHolder holder, int position) {
         Song song = mListSong.get(position);
 
-        if (holder.getAdapterPosition() == mPreIndex) {
-            Log.d("MinhNTn", "onBindViewHolder: set " + mPreIndex);
+        if (song.isPlaying()) {
+            holder.mTVSongName.setTypeface(null, Typeface.BOLD);
+            holder.mTVOrderNumber.setBackgroundResource(R.drawable.ic_now_playing);
+        } else {
             holder.mTVSongName.setTypeface(null, Typeface.NORMAL);
+            holder.mTVOrderNumber.setText(String.valueOf(position + 1));
             holder.mTVOrderNumber.setBackgroundResource(0);
         }
-        holder.mTVOrderNumber.setText(String.valueOf(position + 1));
+
         holder.mTVSongName.setText(song.getTitle());
         holder.mTVSongTime.setText(song.getDurationTimeFormat());
     }
@@ -56,10 +58,6 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
     @Override
     public int getItemCount() {
         return mListSong.size();
-    }
-
-    public void setPreIndex(int preIndex) {
-        mPreIndex = preIndex;
     }
 
     public class SongViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
@@ -78,6 +76,11 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
         @Override
         public void onClick(View v) {
             mICallBack.displayNowPlayingView(mListSong.get(getAdapterPosition()), index);
+            mListSong.get(getAdapterPosition()).setPlaying(true);
+
+            if (index != -1) {
+                mListSong.get(index).setPlaying(false);
+            }
 
             mTVOrderNumber.setText("");
             mTVOrderNumber.setBackgroundResource(R.drawable.ic_now_playing);
