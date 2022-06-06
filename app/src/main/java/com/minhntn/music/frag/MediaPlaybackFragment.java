@@ -8,6 +8,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -30,6 +31,7 @@ public class MediaPlaybackFragment extends Fragment {
     private ImageView mIVAlbumCoverHead;
     private TextView mTVSongNameHead;
     private TextView mTVSongAlbumHead;
+    private ImageButton mBTBackToList;
 
     private Song mCurrentSong;
     private ITransitionFragment mITransitionFragment;
@@ -55,12 +57,19 @@ public class MediaPlaybackFragment extends Fragment {
         if (savedInstanceState != null){
             mCurrentSong = savedInstanceState.getParcelable(KEY_PARCEL);
         }
-        mITransitionFragment.hideActionBar();
-        mRootView = inflater.inflate(R.layout.fragment_media_playback, container, false);
-        mIVBackground = mRootView.findViewById(R.id.iv_album_cover_large);
-        mIVAlbumCoverHead = mRootView.findViewById(R.id.iv_album_cover_head);
-        mTVSongNameHead = mRootView.findViewById(R.id.tv_song_name_now_playing_head);
-        mTVSongAlbumHead = mRootView.findViewById(R.id.tv_song_album_now_playing_head);
+       if (mRootView == null) {
+           mITransitionFragment.hideActionBar();
+           mRootView = inflater.inflate(R.layout.fragment_media_playback, container, false);
+           mIVBackground = mRootView.findViewById(R.id.iv_album_cover_large);
+           mIVAlbumCoverHead = mRootView.findViewById(R.id.iv_album_cover_head);
+           mTVSongNameHead = mRootView.findViewById(R.id.tv_song_name_now_playing_head);
+           mTVSongAlbumHead = mRootView.findViewById(R.id.tv_song_album_now_playing_head);
+           mBTBackToList = mRootView.findViewById(R.id.bt_back_to_list);
+
+           mBTBackToList.setOnClickListener(v -> {
+               getActivity().onBackPressed();
+           });
+       }
 
         return mRootView;
     }

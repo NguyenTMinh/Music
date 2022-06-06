@@ -4,9 +4,11 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.transition.Transition;
 
 import android.Manifest;
 import android.content.IntentFilter;
@@ -122,7 +124,10 @@ public class ActivityMusic extends AppCompatActivity implements ITransitionFragm
         bundle.putByteArray(MediaPlaybackFragment.KEY_COVER, cover);
         bundle.putString(MediaPlaybackFragment.KEY_ALBUM_NAME, albumName);
         mediaPlaybackFragment.setArguments(bundle);
-        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mediaPlaybackFragment)
+
+        FragmentTransaction transaction =  getSupportFragmentManager().beginTransaction();
+        transaction.setCustomAnimations(R.anim.enter_from_bottom, R.anim.slowly_disappear, 0, R.anim.exit_to_bottom)
+                .replace(R.id.fragment_container, mediaPlaybackFragment)
                 .addToBackStack("").commit();
     }
 

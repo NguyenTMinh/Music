@@ -57,7 +57,7 @@
         </LinearLayout>
 
         <ImageButton
-            android:id="@+id/button_back_to_list"
+            android:id="@+id/bt_back_to_list"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"

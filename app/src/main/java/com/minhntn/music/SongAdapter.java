@@ -14,15 +14,13 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.minhntn.music.interf.ICallBack;
 import com.minhntn.music.model.Song;
 
-import java.lang.reflect.Type;
-import java.util.ArrayList;
 import java.util.List;
 
 public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder> {
     private List<Song> mListSong;
     private Context mContext;
     private ICallBack mICallBack;
-    private int index = -1;
+    private int mIndex = -1;
 
     public SongAdapter(List<Song> mListSong, Context mContext, ICallBack iCallBack) {
         this.mListSong = mListSong;
@@ -40,10 +38,12 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
 
     @Override
     public void onBindViewHolder(@NonNull SongViewHolder holder, int position) {
+        Log.d("MinhNTn", "onBindViewHolder: " + position);
         Song song = mListSong.get(position);
 
         if (song.isPlaying()) {
             holder.mTVSongName.setTypeface(null, Typeface.BOLD);
+            holder.mTVOrderNumber.setText("");
             holder.mTVOrderNumber.setBackgroundResource(R.drawable.ic_now_playing);
         } else {
             holder.mTVSongName.setTypeface(null, Typeface.NORMAL);
@@ -75,18 +75,23 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
 
         @Override
         public void onClick(View v) {
-            mICallBack.displayNowPlayingView(mListSong.get(getAdapterPosition()), index);
-            mListSong.get(getAdapterPosition()).setPlaying(true);
 
-            if (index != -1) {
-                mListSong.get(index).setPlaying(false);
+            if (mIndex != -1) {
+                Song song = mListSong.get(mIndex);
+                song.setPlaying(false);
+                notifyItemChanged(mIndex);// update lai bai hat truoc do
             }
+
+            mIndex = getAdapterPosition(); // click vi tri hien tai
+            Song songCurrent = mListSong.get(mIndex);
+            mICallBack.displayNowPlayingView(songCurrent, mIndex);
+            songCurrent.setPlaying(true);
 
             mTVOrderNumber.setText("");
             mTVOrderNumber.setBackgroundResource(R.drawable.ic_now_playing);
             mTVSongName.setTypeface(null, Typeface.BOLD);
 
-            index = getAdapterPosition();
+            notifyItemChanged(mIndex);
         }
     }
 }

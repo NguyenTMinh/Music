@@ -80,18 +80,6 @@ public class AllSongsFragment extends Fragment implements ICallBack {
 
     @Override
     public void displayNowPlayingView(Song song, int position) {
-        if (position != -1) {
-            SongAdapter.SongViewHolder viewHolder = (SongAdapter.SongViewHolder) mRVSongs.findViewHolderForAdapterPosition(position);
-            if ( viewHolder != null) {
-                TextView textView = ((TextView) viewHolder.itemView.findViewById(R.id.tv_order_number));
-                TextView textView1 = viewHolder.itemView.findViewById(R.id.tv_song_name);
-
-                textView.setText(String.valueOf(position + 1));
-                textView.setBackgroundResource(0);
-                textView1.setTypeface(null, Typeface.NORMAL);
-            }
-        }
-
         int lengthAllow = getResources().getInteger(R.integer.length_in_line);
         mNowPlayingView.setVisibility(View.VISIBLE);
         TextView name = mNowPlayingView.findViewById(R.id.tv_song_name_now_playing);
