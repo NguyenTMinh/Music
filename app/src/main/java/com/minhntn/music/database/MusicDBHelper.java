@@ -182,7 +182,6 @@ public class MusicDBHelper extends SQLiteOpenHelper {
             Album album = new Album(albumId, albumName2, imageCover);
             insertTB(song, album);
 
-
             cursor.moveToNext();
         }
     }

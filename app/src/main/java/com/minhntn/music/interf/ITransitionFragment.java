@@ -4,6 +4,7 @@ import com.minhntn.music.model.Album;
 import com.minhntn.music.model.Song;
 
 public interface ITransitionFragment {
-    void transition(Song song);
+    void transition(int position);
     void hideActionBar();
+    void passCurrentPositionIfPortrait(int position);
 }

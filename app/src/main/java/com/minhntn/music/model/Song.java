@@ -1,6 +1,7 @@
 package com.minhntn.music.model;
 
 import android.net.Uri;
+import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
@@ -12,7 +13,7 @@ public class Song implements Parcelable {
     private String mUri;
     private int mAlbumID;
     private String mArtist;
-    private boolean isPlaying;
+    private boolean mIsPlaying;
 
     public Song(int mID, String mTitle, long mDuration, String mUri, String mArtist, int mAlbumID) {
         this.mID = mID;
@@ -30,6 +31,9 @@ public class Song implements Parcelable {
         mUri = in.readString();
         mAlbumID = in.readInt();
         mArtist = in.readString();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            mIsPlaying = in.readBoolean();
+        }
     }
 
     public static final Creator<Song> CREATOR = new Creator<Song>() {
@@ -80,11 +84,11 @@ public class Song implements Parcelable {
     }
 
     public boolean isPlaying() {
-        return isPlaying;
+        return mIsPlaying;
     }
 
     public void setPlaying(boolean playing) {
-        isPlaying = playing;
+        mIsPlaying = playing;
     }
 
     @Override
@@ -100,5 +104,8 @@ public class Song implements Parcelable {
         dest.writeString(mUri);
         dest.writeInt(mAlbumID);
         dest.writeString(mArtist);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            dest.writeBoolean(mIsPlaying);
+        }
     }
 }

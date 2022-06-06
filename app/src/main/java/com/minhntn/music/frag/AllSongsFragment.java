@@ -34,13 +34,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AllSongsFragment extends Fragment implements ICallBack {
+    public static final String FRAGMENT_TAG = "AllSongsFragment";
     private View mRootView;
     private RecyclerView mRVSongs;
     private SongAdapter mSongAdapter;
     private View mNowPlayingView;
     private List<Song> mListSong;
     private ITransitionFragment iTransitionFragment;
-    private Song mCurrentSong;
+    private boolean mIsLand;
+    private int mCurrentIndexSong = -1;
 
     @Override
     public void onAttach(@NonNull Context context) {
@@ -53,19 +55,28 @@ public class AllSongsFragment extends Fragment implements ICallBack {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        mIsLand = getArguments().getBoolean(ActivityMusic.KEY_IS_LAND, false);
         if (mRootView == null) {
             mRootView = inflater.inflate(R.layout.fragment_all_songs, container, false);
-            mSongAdapter = new SongAdapter(mListSong, getContext(), this);
+            if (mListSong != null) {
+                mSongAdapter = new SongAdapter(mListSong, getContext(), this);
+                mSongAdapter.setIndex(mCurrentIndexSong);
+            }
             mRVSongs = mRootView.findViewById(R.id.rv_list_song);
             mRVSongs.setAdapter(mSongAdapter);
             mRVSongs.setLayoutManager(new LinearLayoutManager(getContext()));
 
             mNowPlayingView = mRootView.findViewById(R.id.v_now_playing);
             mNowPlayingView.setOnClickListener(v -> {
-                iTransitionFragment.transition(mCurrentSong);
+                iTransitionFragment.transition(mCurrentIndexSong);
             });
-        } else {
 
+            if (!mIsLand && savedInstanceState != null) {
+                Log.d("MinhNTn", "onCreateView: no null");
+                if (mListSong != null) {
+                    displayNowPlayingView(mCurrentIndexSong);
+                }
+            }
         }
         return mRootView;
     }
@@ -79,16 +90,25 @@ public class AllSongsFragment extends Fragment implements ICallBack {
     }
 
     @Override
-    public void displayNowPlayingView(Song song, int position) {
-        int lengthAllow = getResources().getInteger(R.integer.length_in_line);
-        mNowPlayingView.setVisibility(View.VISIBLE);
-        TextView name = mNowPlayingView.findViewById(R.id.tv_song_name_now_playing);
-        ToggleButton buttonPlay = mNowPlayingView.findViewById(R.id.toggle_play_pause);
+    public void displayNowPlayingView(int position) {
+        mCurrentIndexSong = position;
+        if (!mIsLand) {
+            if (mCurrentIndexSong != -1) {
+                Song currentSong = mListSong.get(position);
+                int lengthAllow = getResources().getInteger(R.integer.length_in_line);
+                mNowPlayingView.setVisibility(View.VISIBLE);
+                TextView name = mNowPlayingView.findViewById(R.id.tv_song_name_now_playing);
+                ToggleButton buttonPlay = mNowPlayingView.findViewById(R.id.toggle_play_pause);
 
-        String nameDisplay = (song.getTitle().length() < lengthAllow)? song.getTitle() : song.getTitle().substring(0, lengthAllow - 3) + "..";
-        name.setText(nameDisplay);
-        new DBAsyncTask().execute(song.getID());
-        mCurrentSong = song;
+                String nameDisplay = (currentSong.getTitle().length() < lengthAllow)? currentSong.getTitle()
+                        : currentSong.getTitle().substring(0, lengthAllow - 3) + "..";
+                name.setText(nameDisplay);
+                new DBAsyncTask().execute(currentSong.getID());
+            }
+            iTransitionFragment.passCurrentPositionIfPortrait(position);
+        } else {
+            iTransitionFragment.transition(mCurrentIndexSong);
+        }
     }
 
     public void setListSong(List<Song> list) {
@@ -99,6 +119,10 @@ public class AllSongsFragment extends Fragment implements ICallBack {
         mListSong.clear();
         mListSong.addAll(list);
         mSongAdapter.notifyDataSetChanged();
+    }
+
+    public void setAdapterIndex(int index) {
+        mCurrentIndexSong = index;
     }
 
     class DBAsyncTask extends AsyncTask<Integer, Void, Cursor> {

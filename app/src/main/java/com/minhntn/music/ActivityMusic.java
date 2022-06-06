@@ -4,6 +4,8 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -18,6 +20,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
@@ -33,15 +36,22 @@ import com.minhntn.music.interf.ITransitionFragment;
 import com.minhntn.music.model.Album;
 import com.minhntn.music.model.Song;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ActivityMusic extends AppCompatActivity implements ITransitionFragment, MyBroadcastReceiver.IDoOnLoadDone {
+    public static final String KEY_IS_LAND = "KEY_IS_LAND";
+    public static final String KEY_INDEX_CURRENT = "KEY_INDEX_CURRENT";
+    public static final String KEY_LIST_SONG = "KEY_LIST_SONG";
+    public static final String KEY_LIST_ALBUM = "KEY_LIST_ALBUM";
     private static final int REQUEST_CODE = 1;
     private List<Song> mListSong;
     private List<Album> mListAlbum;
     private MusicDBHelper mMusicDBHelper;
     private AllSongsFragment mAllSongsFragment;
     private MyBroadcastReceiver mBroadcastReceiver;
+    private boolean mIsLand;
+    private int mIndexCurrentSong = -1;
 
     private IDoInAsyncTask mIDoInAsyncTask = new IDoInAsyncTask() {
         @Override
@@ -62,15 +72,45 @@ public class ActivityMusic extends AppCompatActivity implements ITransitionFragm
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mMusicDBHelper = new MusicDBHelper(this);
-        mListSong = mMusicDBHelper.getAllSongs();
-        mListAlbum = mMusicDBHelper.getAllAlbums();
-        checkAppPermission();
+        if (savedInstanceState != null) {
+            mMusicDBHelper = new MusicDBHelper(this);
+            mListSong = savedInstanceState.getParcelableArrayList(KEY_LIST_SONG);
+            mListAlbum = savedInstanceState.getParcelableArrayList(KEY_LIST_ALBUM);
+            mIndexCurrentSong = savedInstanceState.getInt(KEY_INDEX_CURRENT);
+        } else {
+            mMusicDBHelper = new MusicDBHelper(this);
+            mListSong = mMusicDBHelper.getAllSongs();
+            mListAlbum = mMusicDBHelper.getAllAlbums();
+            checkAppPermission();
+        }
+        mIsLand = getResources().getBoolean(R.bool.is_land);
 
-        mAllSongsFragment = new AllSongsFragment();
+        Bundle bundle = new Bundle();
+        bundle.putBoolean(KEY_IS_LAND, mIsLand);
+
+        mAllSongsFragment = (AllSongsFragment)
+                getSupportFragmentManager().findFragmentByTag(AllSongsFragment.FRAGMENT_TAG);
+        if (mAllSongsFragment == null) {
+            mAllSongsFragment = new AllSongsFragment();
+        } else {
+            getSupportFragmentManager().beginTransaction().remove(mAllSongsFragment).commit();
+            mAllSongsFragment = (AllSongsFragment) recreateFragment(mAllSongsFragment);
+        }
         mAllSongsFragment.setListSong(mListSong);
-        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mAllSongsFragment,
-                null).commit();
+        mAllSongsFragment.setAdapterIndex(mIndexCurrentSong);
+        mAllSongsFragment.setArguments(bundle);
+
+
+        if (mIsLand) {
+            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container_1, mAllSongsFragment,
+                    AllSongsFragment.FRAGMENT_TAG).commit();
+            if (mIndexCurrentSong != -1) {
+                transition(mIndexCurrentSong);
+            }
+        } else {
+            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mAllSongsFragment,
+                    AllSongsFragment.FRAGMENT_TAG).commit();
+        }
 
         mBroadcastReceiver = new MyBroadcastReceiver(this);
         IntentFilter intentFilter = new IntentFilter();
@@ -109,8 +149,9 @@ public class ActivityMusic extends AppCompatActivity implements ITransitionFragm
     }
 
     @Override
-    public void transition(Song song) {
-        MediaPlaybackFragment mediaPlaybackFragment = new MediaPlaybackFragment(song);
+    public void transition(int position) {
+        mIndexCurrentSong = position;
+        Song song = mListSong.get(position);
         Bundle bundle = new Bundle();
         byte[] cover = new byte[1];
         String albumName = "";
@@ -123,12 +164,37 @@ public class ActivityMusic extends AppCompatActivity implements ITransitionFragm
         }
         bundle.putByteArray(MediaPlaybackFragment.KEY_COVER, cover);
         bundle.putString(MediaPlaybackFragment.KEY_ALBUM_NAME, albumName);
-        mediaPlaybackFragment.setArguments(bundle);
+        bundle.putBoolean(KEY_IS_LAND, mIsLand);
 
-        FragmentTransaction transaction =  getSupportFragmentManager().beginTransaction();
-        transaction.setCustomAnimations(R.anim.enter_from_bottom, R.anim.slowly_disappear, 0, R.anim.exit_to_bottom)
-                .replace(R.id.fragment_container, mediaPlaybackFragment)
-                .addToBackStack("").commit();
+        FragmentManager fragManager = getSupportFragmentManager();
+
+        if (fragManager.getBackStackEntryCount() == 0 && !mIsLand) {
+            MediaPlaybackFragment mediaPlaybackFragment = new MediaPlaybackFragment();
+            mediaPlaybackFragment.setCurrentSong(song);
+            mediaPlaybackFragment.setArguments(bundle);
+
+            FragmentTransaction transaction =  fragManager.beginTransaction();
+            transaction.setCustomAnimations(R.anim.enter_from_bottom, R.anim.slowly_disappear, 0, R.anim.exit_to_bottom)
+                    .replace(R.id.fragment_container, mediaPlaybackFragment, MediaPlaybackFragment.FRAGMENT_TAG)
+                    .addToBackStack("").commit();
+        } else {
+            if (fragManager.getBackStackEntryCount() == 0) {
+                MediaPlaybackFragment mediaPlaybackFragment = new MediaPlaybackFragment();
+                mediaPlaybackFragment.setCurrentSong(song);
+                mediaPlaybackFragment.setArguments(bundle);
+
+                FragmentTransaction transaction =  fragManager.beginTransaction();
+                transaction.setCustomAnimations(R.anim.enter_from_bottom, R.anim.slowly_disappear, 0, R.anim.exit_to_bottom)
+                        .replace(R.id.fragment_container, mediaPlaybackFragment, MediaPlaybackFragment.FRAGMENT_TAG)
+                        .addToBackStack("").commit();
+            } else {
+                MediaPlaybackFragment mediaPlaybackFragment = (MediaPlaybackFragment)
+                        fragManager.findFragmentByTag(MediaPlaybackFragment.FRAGMENT_TAG);
+                mediaPlaybackFragment.setArguments(bundle);
+                mediaPlaybackFragment.setCurrentSong(song);
+                mediaPlaybackFragment.onUpdateCurrentView();
+            }
+        }
     }
 
     @Override
@@ -137,11 +203,20 @@ public class ActivityMusic extends AppCompatActivity implements ITransitionFragm
     }
 
     @Override
+    public void passCurrentPositionIfPortrait(int position) {
+        mIndexCurrentSong = position;
+    }
+
+    @Override
     public void onBackPressed() {
         if (!getSupportActionBar().isShowing()) {
             getSupportActionBar().show();
         }
-        super.onBackPressed();
+        if (mIsLand) {
+            finish();
+        } else {
+            super.onBackPressed();
+        }
     }
 
     @Override
@@ -154,5 +229,29 @@ public class ActivityMusic extends AppCompatActivity implements ITransitionFragm
     @Override
     public void doOnLoadDone() {
         mIDoInAsyncTask.onPostExecute();
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putParcelableArrayList(KEY_LIST_SONG, (ArrayList<? extends Parcelable>) mListSong);
+        outState.putParcelableArrayList(KEY_LIST_ALBUM, (ArrayList<? extends Parcelable>) mListAlbum);
+        outState.putInt(KEY_INDEX_CURRENT, mIndexCurrentSong);
+    }
+
+    private Fragment recreateFragment(Fragment f)
+    {
+        try {
+            Fragment.SavedState savedState = getSupportFragmentManager().saveFragmentInstanceState(f);
+
+            Fragment newInstance = f.getClass().newInstance();
+            newInstance.setInitialSavedState(savedState);
+
+            return newInstance;
+        }
+        catch (Exception e) // InstantiationException, IllegalAccessException
+        {
+            throw new RuntimeException("Cannot reinstantiate fragment " + f.getClass().getName(), e);
+        }
     }
 }

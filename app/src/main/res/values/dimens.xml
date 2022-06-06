@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="now_play_bottom">100dp</dimen>
+    <bool name="is_land">false</bool>
 </resources>

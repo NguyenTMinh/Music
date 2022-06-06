@@ -2,6 +2,8 @@ package com.minhntn.music;
 
 import android.content.Context;
 import android.graphics.Typeface;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -38,7 +40,6 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
 
     @Override
     public void onBindViewHolder(@NonNull SongViewHolder holder, int position) {
-        Log.d("MinhNTn", "onBindViewHolder: " + position);
         Song song = mListSong.get(position);
 
         if (song.isPlaying()) {
@@ -60,6 +61,11 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
         return mListSong.size();
     }
 
+    public void setIndex(int index) {
+        Log.d("MinhNTn", "setIndex: " + mIndex);
+        mIndex = index;
+    }
+
     public class SongViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         TextView mTVOrderNumber;
         TextView mTVSongName;
@@ -75,16 +81,15 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
 
         @Override
         public void onClick(View v) {
-
             if (mIndex != -1) {
                 Song song = mListSong.get(mIndex);
                 song.setPlaying(false);
                 notifyItemChanged(mIndex);// update lai bai hat truoc do
             }
-
             mIndex = getAdapterPosition(); // click vi tri hien tai
+
             Song songCurrent = mListSong.get(mIndex);
-            mICallBack.displayNowPlayingView(songCurrent, mIndex);
+            mICallBack.displayNowPlayingView(mIndex);
             songCurrent.setPlaying(true);
 
             mTVOrderNumber.setText("");
