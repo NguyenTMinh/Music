@@ -81,7 +81,7 @@ public class MediaPlaybackFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         if (mCurrentSong != null) {
-            setCurrentView();
+            setCurrentView(mCurrentSong);
         }
     }
 
@@ -95,11 +95,15 @@ public class MediaPlaybackFragment extends Fragment {
         mCurrentSong = song;
     }
 
-    public void onUpdateCurrentView() {
-        setCurrentView();
+    public void onUpdateCurrentView(Song song) {
+        if (getActivity() != null) {
+            setCurrentView(song);
+        }
     }
 
-    private void setCurrentView() {
+    private void setCurrentView(Song song) {
+        mCurrentSong = song;
+        Log.d("MinhNTn", "setCurrentView: " + mCurrentSong);
         byte[] cover = getArguments().getByteArray(KEY_COVER);
         String alName = getArguments().getString(KEY_ALBUM_NAME);
         Bitmap bitmap = BitmapFactory.decodeByteArray(cover, 0, cover.length);
