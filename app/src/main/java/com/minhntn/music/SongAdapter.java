@@ -62,7 +62,6 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
     }
 
     public void setIndex(int index) {
-        Log.d("MinhNTn", "setIndex: " + mIndex);
         mIndex = index;
     }
 

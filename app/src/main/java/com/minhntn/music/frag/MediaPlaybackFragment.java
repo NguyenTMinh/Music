@@ -80,7 +80,9 @@ public class MediaPlaybackFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        setCurrentView();
+        if (mCurrentSong != null) {
+            setCurrentView();
+        }
     }
 
     @Override
@@ -98,7 +100,6 @@ public class MediaPlaybackFragment extends Fragment {
     }
 
     private void setCurrentView() {
-        Log.d("MinhNTn", "setCurrentView: " + mIVBackground);
         byte[] cover = getArguments().getByteArray(KEY_COVER);
         String alName = getArguments().getString(KEY_ALBUM_NAME);
         Bitmap bitmap = BitmapFactory.decodeByteArray(cover, 0, cover.length);

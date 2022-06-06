@@ -20,6 +20,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Parcelable;
 import android.util.Log;
 import android.view.Menu;
@@ -49,6 +50,7 @@ public class ActivityMusic extends AppCompatActivity implements ITransitionFragm
     private List<Album> mListAlbum;
     private MusicDBHelper mMusicDBHelper;
     private AllSongsFragment mAllSongsFragment;
+    private MediaPlaybackFragment mMediaPlaybackFragment;
     private MyBroadcastReceiver mBroadcastReceiver;
     private boolean mIsLand;
     private int mIndexCurrentSong = -1;
@@ -90,6 +92,8 @@ public class ActivityMusic extends AppCompatActivity implements ITransitionFragm
 
         mAllSongsFragment = (AllSongsFragment)
                 getSupportFragmentManager().findFragmentByTag(AllSongsFragment.FRAGMENT_TAG);
+        mMediaPlaybackFragment = (MediaPlaybackFragment)
+                getSupportFragmentManager().findFragmentByTag(MediaPlaybackFragment.FRAGMENT_TAG);
         if (mAllSongsFragment == null) {
             mAllSongsFragment = new AllSongsFragment();
         } else {
@@ -99,13 +103,25 @@ public class ActivityMusic extends AppCompatActivity implements ITransitionFragm
         mAllSongsFragment.setListSong(mListSong);
         mAllSongsFragment.setAdapterIndex(mIndexCurrentSong);
         mAllSongsFragment.setArguments(bundle);
-
+        
+        if (mMediaPlaybackFragment == null) {
+            mMediaPlaybackFragment = new MediaPlaybackFragment();
+        } else {
+            getSupportFragmentManager().beginTransaction().remove(mMediaPlaybackFragment)
+                    .commit();
+            mMediaPlaybackFragment = (MediaPlaybackFragment) recreateFragment(mMediaPlaybackFragment);
+        }
+        mMediaPlaybackFragment.setArguments(bundle);
 
         if (mIsLand) {
+            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mMediaPlaybackFragment,
+                    MediaPlaybackFragment.FRAGMENT_TAG).commit();
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container_1, mAllSongsFragment,
                     AllSongsFragment.FRAGMENT_TAG).commit();
-            if (mIndexCurrentSong != -1) {
-                transition(mIndexCurrentSong);
+            if (savedInstanceState != null) {
+                if (mIndexCurrentSong != -1) {
+                    transition(mIndexCurrentSong);
+                }
             }
         } else {
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mAllSongsFragment,
@@ -151,7 +167,7 @@ public class ActivityMusic extends AppCompatActivity implements ITransitionFragm
     @Override
     public void transition(int position) {
         mIndexCurrentSong = position;
-        Song song = mListSong.get(position);
+        Song song = mListSong.get(mIndexCurrentSong);
         Bundle bundle = new Bundle();
         byte[] cover = new byte[1];
         String albumName = "";
@@ -169,31 +185,56 @@ public class ActivityMusic extends AppCompatActivity implements ITransitionFragm
         FragmentManager fragManager = getSupportFragmentManager();
 
         if (fragManager.getBackStackEntryCount() == 0 && !mIsLand) {
-            MediaPlaybackFragment mediaPlaybackFragment = new MediaPlaybackFragment();
-            mediaPlaybackFragment.setCurrentSong(song);
-            mediaPlaybackFragment.setArguments(bundle);
+            mMediaPlaybackFragment.setCurrentSong(song);
+            mMediaPlaybackFragment.setArguments(bundle);
 
             FragmentTransaction transaction =  fragManager.beginTransaction();
             transaction.setCustomAnimations(R.anim.enter_from_bottom, R.anim.slowly_disappear, 0, R.anim.exit_to_bottom)
-                    .replace(R.id.fragment_container, mediaPlaybackFragment, MediaPlaybackFragment.FRAGMENT_TAG)
-                    .addToBackStack("").commit();
+                    .replace(R.id.fragment_container, mMediaPlaybackFragment, MediaPlaybackFragment.FRAGMENT_TAG)
+                    .commit();
         } else {
             if (fragManager.getBackStackEntryCount() == 0) {
-                MediaPlaybackFragment mediaPlaybackFragment = new MediaPlaybackFragment();
-                mediaPlaybackFragment.setCurrentSong(song);
-                mediaPlaybackFragment.setArguments(bundle);
+                mMediaPlaybackFragment.setCurrentSong(song);
+                mMediaPlaybackFragment.setArguments(bundle);
 
                 FragmentTransaction transaction =  fragManager.beginTransaction();
                 transaction.setCustomAnimations(R.anim.enter_from_bottom, R.anim.slowly_disappear, 0, R.anim.exit_to_bottom)
-                        .replace(R.id.fragment_container, mediaPlaybackFragment, MediaPlaybackFragment.FRAGMENT_TAG)
-                        .addToBackStack("").commit();
+                        .replace(R.id.fragment_container, mMediaPlaybackFragment, MediaPlaybackFragment.FRAGMENT_TAG)
+                        .commit();
             } else {
-                MediaPlaybackFragment mediaPlaybackFragment = (MediaPlaybackFragment)
-                        fragManager.findFragmentByTag(MediaPlaybackFragment.FRAGMENT_TAG);
-                mediaPlaybackFragment.setArguments(bundle);
-                mediaPlaybackFragment.setCurrentSong(song);
-                mediaPlaybackFragment.onUpdateCurrentView();
+
+                mMediaPlaybackFragment.setArguments(bundle);
+                mMediaPlaybackFragment.setCurrentSong(song);
+                mMediaPlaybackFragment.onUpdateCurrentView();
+
+                FragmentTransaction transaction =  fragManager.beginTransaction();
+                transaction.setCustomAnimations(R.anim.enter_from_bottom, R.anim.slowly_disappear, 0, R.anim.exit_to_bottom)
+                        .replace(R.id.fragment_container, mMediaPlaybackFragment, MediaPlaybackFragment.FRAGMENT_TAG)
+                        .commit();
             }
+        }
+
+//        if (mIsLand) {
+//            mMediaPlaybackFragment.setCurrentSong(song);
+//            mMediaPlaybackFragment.setArguments(bundle);
+//
+//            mMediaPlaybackFragment.onUpdateCurrentView();
+//        } else {
+//            mMediaPlaybackFragment.setCurrentSong(song);
+//            Log.d("MinhNTn", "transition: " + song);
+//            mMediaPlaybackFragment.setArguments(bundle);
+//
+//            FragmentTransaction transaction =  fragManager.beginTransaction();
+//            transaction.setCustomAnimations(R.anim.enter_from_bottom, R.anim.slowly_disappear, 0, R.anim.exit_to_bottom)
+//                    .replace(R.id.fragment_container, mMediaPlaybackFragment, MediaPlaybackFragment.FRAGMENT_TAG)
+//                    .addToBackStack("").commit();
+//
+//            new Handler().postDelayed(new Runnable() {
+//                @Override
+//                public void run() {
+//                    mMediaPlaybackFragment.onUpdateCurrentView();
+//                }
+//            }, 150);
         }
     }
 

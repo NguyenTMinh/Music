@@ -72,7 +72,6 @@ public class AllSongsFragment extends Fragment implements ICallBack {
             });
 
             if (!mIsLand && savedInstanceState != null) {
-                Log.d("MinhNTn", "onCreateView: no null");
                 if (mListSong != null) {
                     displayNowPlayingView(mCurrentIndexSong);
                 }
