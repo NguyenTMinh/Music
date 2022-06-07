@@ -88,6 +88,7 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
             mIndex = getAdapterPosition(); // click vi tri hien tai
 
             Song songCurrent = mListSong.get(mIndex);
+            mICallBack.setStatePlay(true);
             mICallBack.displayNowPlayingView(mIndex);
             songCurrent.setPlaying(true);
 

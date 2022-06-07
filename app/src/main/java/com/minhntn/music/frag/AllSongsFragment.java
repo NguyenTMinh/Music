@@ -4,8 +4,10 @@ import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -41,6 +43,7 @@ public class AllSongsFragment extends Fragment implements ICallBack {
     private List<Song> mListSong;
     private ICommunicate iCommunicate;
     private boolean mIsLand;
+    private boolean mIsPlaying;
     private int mCurrentIndexSong = -1;
 
     @Override
@@ -55,6 +58,7 @@ public class AllSongsFragment extends Fragment implements ICallBack {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         mIsLand = getArguments().getBoolean(ActivityMusic.KEY_IS_LAND, false);
+        mIsPlaying = getArguments().getBoolean(ActivityMusic.KEY_MUSIC_PLAYING, false);
         if (mRootView == null) {
             mRootView = inflater.inflate(R.layout.fragment_all_songs, container, false);
             if (mListSong != null) {
@@ -97,12 +101,16 @@ public class AllSongsFragment extends Fragment implements ICallBack {
         }
         if (!mIsLand) {
             if (mCurrentIndexSong != -1) {
+
                 Song currentSong = mListSong.get(position);
                 int lengthAllow = getResources().getInteger(R.integer.length_in_line);
                 mNowPlayingView.setVisibility(View.VISIBLE);
                 TextView name = mNowPlayingView.findViewById(R.id.tv_song_name_now_playing);
                 mTBPlaySongBottom = mNowPlayingView.findViewById(R.id.toggle_play_pause);
-                mTBPlaySongBottom.setChecked(false);
+                Log.d("MinhNTn", "displayNowPlayingView: " + mIsPlaying);
+                mTBPlaySongBottom.forceLayout();
+                mTBPlaySongBottom.setChecked(!mIsPlaying);
+
                 mTBPlaySongBottom.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                     @Override
                     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -123,6 +131,11 @@ public class AllSongsFragment extends Fragment implements ICallBack {
         } else {
             iCommunicate.transition(mCurrentIndexSong);
         }
+    }
+
+    @Override
+    public void setStatePlay(boolean state) {
+        mIsPlaying = state;
     }
 
     public void setListSong(List<Song> list) {
@@ -167,6 +180,7 @@ public class AllSongsFragment extends Fragment implements ICallBack {
 
             cover.setImageBitmap(bitmap);
             album.setText(albumDisplay);
+            mTBPlaySongBottom.setChecked(!mIsPlaying);
         }
     }
 

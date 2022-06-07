@@ -20,6 +20,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Parcelable;
+import android.util.Log;
 import android.view.Menu;
 
 import com.minhntn.music.database.MusicDBHelper;
@@ -39,6 +40,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
     public static final String KEY_INDEX_CURRENT = "KEY_INDEX_CURRENT";
     public static final String KEY_LIST_SONG = "KEY_LIST_SONG";
     public static final String KEY_LIST_ALBUM = "KEY_LIST_ALBUM";
+    public static final String KEY_MUSIC_PLAYING = "KEY_MUSIC_PLAYING";
 
     private static final int REQUEST_CODE = 1;
     private List<Song> mListSong;
@@ -51,6 +53,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
     private int mIndexCurrentSong = -1;
     private MediaPlaybackService mService;
     private boolean mIsServiceBound;
+    private boolean mIsPlaying;
 
     private IDoInAsyncTask mIDoInAsyncTask = new IDoInAsyncTask() {
         @Override
@@ -97,6 +100,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
             mListSong = savedInstanceState.getParcelableArrayList(KEY_LIST_SONG);
             mListAlbum = savedInstanceState.getParcelableArrayList(KEY_LIST_ALBUM);
             mIndexCurrentSong = savedInstanceState.getInt(KEY_INDEX_CURRENT);
+            mIsPlaying = savedInstanceState.getBoolean(KEY_MUSIC_PLAYING, false);
         } else {
             mMusicDBHelper = new MusicDBHelper(this);
             checkAppPermission();
@@ -108,6 +112,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
 
         Bundle bundle = new Bundle();
         bundle.putBoolean(KEY_IS_LAND, mIsLand);
+        bundle.putBoolean(KEY_MUSIC_PLAYING, mIsPlaying);
 
         // Get the instance exists of the fragment
         mAllSongsFragment = (AllSongsFragment)
@@ -220,6 +225,12 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        mIsPlaying = mService.isMediaPlaying();
+    }
+
+    @Override
     public void doOnLoadDone() {
         mIDoInAsyncTask.onPostExecute();
     }
@@ -230,6 +241,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
         outState.putParcelableArrayList(KEY_LIST_SONG, (ArrayList<? extends Parcelable>) mListSong);
         outState.putParcelableArrayList(KEY_LIST_ALBUM, (ArrayList<? extends Parcelable>) mListAlbum);
         outState.putInt(KEY_INDEX_CURRENT, mIndexCurrentSong);
+        outState.putBoolean(KEY_MUSIC_PLAYING, mIsPlaying);
     }
 
     /* Recreate with the existed fragment, so that it can move from a different container to another container
