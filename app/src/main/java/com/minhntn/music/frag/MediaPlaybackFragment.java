@@ -5,7 +5,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,7 +22,7 @@ import androidx.fragment.app.Fragment;
 import com.bumptech.glide.Glide;
 import com.minhntn.music.ActivityMusic;
 import com.minhntn.music.R;
-import com.minhntn.music.interf.ITransitionFragment;
+import com.minhntn.music.interf.ICommunicate;
 import com.minhntn.music.model.Song;
 
 public class MediaPlaybackFragment extends Fragment {
@@ -45,7 +44,7 @@ public class MediaPlaybackFragment extends Fragment {
 
     private boolean mIsLand;
     private Song mCurrentSong;
-    private ITransitionFragment mITransitionFragment;
+    private ICommunicate mICommunicate;
     private CountDownTimer mTimer;
 
     public MediaPlaybackFragment() {}
@@ -53,8 +52,8 @@ public class MediaPlaybackFragment extends Fragment {
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-        if (context instanceof ITransitionFragment) {
-            mITransitionFragment = (ITransitionFragment) context;
+        if (context instanceof ICommunicate) {
+            mICommunicate = (ICommunicate) context;
         }
     }
 
@@ -81,13 +80,13 @@ public class MediaPlaybackFragment extends Fragment {
                @Override
                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                    if (isChecked) {
-                       mITransitionFragment.pauseMusic();
+                       mICommunicate.pauseMusic();
                        if (mTimer != null) {
                            mTimer.cancel();
                        }
                    } else {
-                       mITransitionFragment.resumeMusic();
-                       setCountdownTimer(mCurrentSong.getDuration() - mITransitionFragment.getTimeCurrentPlay());
+                       mICommunicate.resumeMusic();
+                       setCountdownTimer(mCurrentSong.getDuration() - mICommunicate.getTimeCurrentPlay());
                    }
                }
            });
@@ -96,7 +95,7 @@ public class MediaPlaybackFragment extends Fragment {
 
            if (!mIsLand) {
                mBTBackToList.setVisibility(View.VISIBLE);
-               mITransitionFragment.hideActionBar();
+               mICommunicate.hideActionBar();
            } else {
                mBTBackToList.setVisibility(View.INVISIBLE);
            }
@@ -130,7 +129,7 @@ public class MediaPlaybackFragment extends Fragment {
     public void onResume() {
         super.onResume();
         if (mTimer != null) {
-            setCountdownTimer(mCurrentSong.getDuration() - mITransitionFragment.getTimeCurrentPlay());
+            setCountdownTimer(mCurrentSong.getDuration() - mICommunicate.getTimeCurrentPlay());
         }
     }
 
@@ -139,6 +138,7 @@ public class MediaPlaybackFragment extends Fragment {
     }
 
     public void onUpdateCurrentView(Song song) {
+        mTBPlaySong.setChecked(!mICommunicate.isMusicPlaying());
         if (getActivity() != null) {
             setCurrentView(song);
         }
@@ -155,6 +155,28 @@ public class MediaPlaybackFragment extends Fragment {
         mTVSongAlbumHead.setText(alName);
         mTVSongDuration.setText(mCurrentSong.getDurationTimeFormat());
         mSBSongProgress.setMax((int) mCurrentSong.getDuration());
+        mSBSongProgress.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (fromUser) {
+                    mICommunicate.seekTimeTo(progress);
+                    if (mTimer != null) {
+                        mTimer.cancel();
+                    }
+                    setCountdownTimer(mCurrentSong.getDuration() - mICommunicate.getTimeCurrentPlay());
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
         setCountdownTimer(mCurrentSong.getDuration());
     }
 
@@ -162,19 +184,20 @@ public class MediaPlaybackFragment extends Fragment {
         mTimer = new CountDownTimer(duration, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
-                int timeS = mITransitionFragment.getTimeCurrentPlay() / 1000;
-                int min = timeS / 60;
-                int sec = timeS % 60;
+                int timeS = (int) mICommunicate.getTimeCurrentPlay() / 1000;
+                int min = (int) (timeS / 60);
+                int sec = (int) (timeS % 60);
                 String timeFormat = String.format("%d:%d",min, sec);
                 mTVSongCurrentTime.setText(timeFormat);
-                mSBSongProgress.setProgress(mITransitionFragment.getTimeCurrentPlay());
+                mSBSongProgress.setProgress(mICommunicate.getTimeCurrentPlay());
             }
 
             @Override
             public void onFinish() {
-
+                mTBPlaySong.setChecked(true);
             }
         };
+
         mTimer.start();
     }
 }

@@ -8,9 +8,6 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.transition.Transition;
 
 import android.Manifest;
 import android.app.Service;
@@ -19,26 +16,17 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Parcelable;
-import android.util.Log;
 import android.view.Menu;
-import android.view.View;
-import android.widget.ImageView;
-import android.widget.TextView;
 
 import com.minhntn.music.database.MusicDBHelper;
 import com.minhntn.music.frag.AllSongsFragment;
 import com.minhntn.music.frag.MediaPlaybackFragment;
-import com.minhntn.music.interf.ICallBack;
+import com.minhntn.music.interf.ICommunicate;
 import com.minhntn.music.interf.IDoInAsyncTask;
-import com.minhntn.music.interf.ITransitionFragment;
 import com.minhntn.music.model.Album;
 import com.minhntn.music.model.Song;
 import com.minhntn.music.serv.MediaPlaybackService;
@@ -46,7 +34,7 @@ import com.minhntn.music.serv.MediaPlaybackService;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ActivityMusic extends AppCompatActivity implements ITransitionFragment, MyBroadcastReceiver.IDoOnLoadDone {
+public class ActivityMusic extends AppCompatActivity implements ICommunicate, MyBroadcastReceiver.IDoOnLoadDone {
     public static final String KEY_IS_LAND = "KEY_IS_LAND";
     public static final String KEY_INDEX_CURRENT = "KEY_INDEX_CURRENT";
     public static final String KEY_LIST_SONG = "KEY_LIST_SONG";
@@ -75,6 +63,13 @@ public class ActivityMusic extends AppCompatActivity implements ITransitionFragm
             mListSong = mMusicDBHelper.getAllSongs();
             mListAlbum = mMusicDBHelper.getAllAlbums();
             mAllSongsFragment.notifyAdapter(mListSong);
+
+            if (mListSong.size() > 0) {
+                Intent intent = new Intent(ActivityMusic.this, MediaPlaybackService.class);
+                intent.putParcelableArrayListExtra(KEY_LIST_SONG, (ArrayList<? extends Parcelable>) mListSong);
+                bindService(intent, mServiceConnection, Service.BIND_AUTO_CREATE);
+            }
+
         }
     };
 
@@ -96,7 +91,7 @@ public class ActivityMusic extends AppCompatActivity implements ITransitionFragm
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        
         if (savedInstanceState != null) {
             mMusicDBHelper = new MusicDBHelper(this);
             mListSong = savedInstanceState.getParcelableArrayList(KEY_LIST_SONG);
@@ -104,10 +99,11 @@ public class ActivityMusic extends AppCompatActivity implements ITransitionFragm
             mIndexCurrentSong = savedInstanceState.getInt(KEY_INDEX_CURRENT);
         } else {
             mMusicDBHelper = new MusicDBHelper(this);
+            checkAppPermission();
             mListSong = mMusicDBHelper.getAllSongs();
             mListAlbum = mMusicDBHelper.getAllAlbums();
-            checkAppPermission();
         }
+
         mIsLand = getResources().getBoolean(R.bool.is_land);
 
         Bundle bundle = new Bundle();
@@ -166,10 +162,11 @@ public class ActivityMusic extends AppCompatActivity implements ITransitionFragm
         LocalBroadcastManager.getInstance(this)
                 .registerReceiver(mBroadcastReceiver, intentFilter);
 
-        // Bind service to play music
-        Intent intent = new Intent(ActivityMusic.this, MediaPlaybackService.class);
-        intent.putParcelableArrayListExtra(KEY_LIST_SONG, (ArrayList<? extends Parcelable>) mListSong);
-        bindService(intent, mServiceConnection, Service.BIND_AUTO_CREATE);
+        if (mListSong.size() > 0) {
+            Intent intent = new Intent(ActivityMusic.this, MediaPlaybackService.class);
+            intent.putParcelableArrayListExtra(KEY_LIST_SONG, (ArrayList<? extends Parcelable>) mListSong);
+            bindService(intent, mServiceConnection, Service.BIND_AUTO_CREATE);
+        }
 
     }
 
@@ -210,6 +207,7 @@ public class ActivityMusic extends AppCompatActivity implements ITransitionFragm
             finish();
         } else {
             super.onBackPressed();
+            mAllSongsFragment.setButtonState(mService.isMediaPlaying());
         }
     }
 
@@ -252,7 +250,7 @@ public class ActivityMusic extends AppCompatActivity implements ITransitionFragm
     }
 
     /**
-     * These override methods below is the method of ITransitionFragment interface
+     * These override methods below is the method of ICommunicate interface
      */
     @Override
     public void transition(int position) {
@@ -312,32 +310,48 @@ public class ActivityMusic extends AppCompatActivity implements ITransitionFragm
 
     @Override
     public void playMusic(int position) {
-        if (mService != null)
-        mService.playSong(position);
+        if (mService != null){
+            mService.playSong(position);
+        }
     }
 
     @Override
     public void pauseMusic() {
-        if (mService != null)
-        mService.pauseSong();
+        if (mService != null){
+            mService.pauseSong();
+        }
     }
 
     @Override
     public void resumeMusic() {
-        if (mService != null)
-        mService.resumeSong();
+        if (mService != null) {
+            mService.resumeSong();
+        }
     }
 
     @Override
     public int getTimeCurrentPlay() {
-        if (mService != null)
-        return mService.getCurrentTimeSong();
+        if (mService != null){
+            return mService.getCurrentTimeSong();
+        }
         return 0;
     }
 
     @Override
     public void startService() {
         startService(new Intent(this, MediaPlaybackService.class));
+    }
+
+    @Override
+    public void seekTimeTo(int time) {
+        if (mService != null) {
+            mService.seekPlayTimeTo(time);
+        }
+    }
+
+    @Override
+    public boolean isMusicPlaying() {
+        return mService.isMediaPlaying();
     }
 
 }

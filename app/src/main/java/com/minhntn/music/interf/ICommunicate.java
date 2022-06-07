@@ -3,7 +3,7 @@ package com.minhntn.music.interf;
 import com.minhntn.music.model.Album;
 import com.minhntn.music.model.Song;
 
-public interface ITransitionFragment {
+public interface ICommunicate {
     void transition(int position);
     void hideActionBar();
     void passCurrentPositionIfPortrait(int position);
@@ -12,4 +12,6 @@ public interface ITransitionFragment {
     void resumeMusic();
     int getTimeCurrentPlay();
     void startService();
+    void seekTimeTo(int time);
+    boolean isMusicPlaying();
 }

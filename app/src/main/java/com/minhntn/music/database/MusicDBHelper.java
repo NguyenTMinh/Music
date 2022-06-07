@@ -8,9 +8,7 @@ import android.database.sqlite.SQLiteStatement;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.MediaMetadataRetriever;
-import android.os.Environment;
 import android.provider.MediaStore;
-import android.util.Log;
 
 import com.minhntn.music.R;
 import com.minhntn.music.model.Album;

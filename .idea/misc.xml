@@ -23,7 +23,7 @@
         <entry key="app/src/main/res/layout-land/activity_main.xml" value="0.18" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.14" />
         <entry key="app/src/main/res/layout/fragment_all_songs.xml" value="0.33" />
-        <entry key="app/src/main/res/layout/fragment_media_playback.xml" value="0.33" />
+        <entry key="app/src/main/res/layout/fragment_media_playback.xml" value="0.25" />
         <entry key="app/src/main/res/layout/item_song.xml" value="0.16" />
         <entry key="app/src/main/res/layout/now_play_song.xml" value="0.33" />
         <entry key="app/src/main/res/menu/menu_action_bar.xml" value="0.2953703703703704" />

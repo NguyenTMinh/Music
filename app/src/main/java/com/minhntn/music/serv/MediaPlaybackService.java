@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.IBinder;
-import android.util.Log;
 
 import androidx.annotation.Nullable;
 
@@ -15,7 +14,6 @@ import com.minhntn.music.model.Song;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 public class MediaPlaybackService extends Service implements MediaPlayer.OnPreparedListener {
     private MediaPlayer mMediaPlayer;
@@ -59,8 +57,8 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
             if (mMediaPlayer.isPlaying()){
                 mMediaPlayer.pause();
                 mMediaPlayer.stop();
-                mMediaPlayer.reset();
             }
+            mMediaPlayer.reset();
             mMediaPlayer.setDataSource(this, song.getUri());
             mMediaPlayer.setOnPreparedListener(this);
             mMediaPlayer.prepareAsync();
@@ -83,4 +81,11 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
         return mMediaPlayer.getCurrentPosition();
     }
 
+    public void seekPlayTimeTo(int seekTime) {
+        mMediaPlayer.seekTo(seekTime);
+    }
+
+    public boolean isMediaPlaying() {
+        return mMediaPlayer.isPlaying();
+    }
 }

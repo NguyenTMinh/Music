@@ -61,7 +61,13 @@ public class Song implements Parcelable {
     }
 
     public String getDurationTimeFormat() {
-        int timeS = (int) (mDuration / 1000);
+        long timeA = mDuration;
+        if (mDuration % 1000 > 100) {
+            timeA += 1000;
+        } else if (mDuration % 1000 < 10) {
+            timeA -= 1000;
+        }
+        int timeS = (int) ((timeA) / 1000);
         int min = (int) (timeS / 60);
         int sec = (int) (timeS % 60);
         return String.format("%d:%d",min, sec);
