@@ -4,13 +4,17 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CompoundButton;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.ToggleButton;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -27,6 +31,7 @@ public class MediaPlaybackFragment extends Fragment {
     public static final String KEY_COVER = "KEY_COVER";
     public static final String KEY_ALBUM_NAME = "KEY_ALBUM_NAME";
     private static final String KEY_PARCEL = "KEY_PARCEL";
+
     private View mRootView;
     private ImageView mIVBackground;
     private ImageView mIVAlbumCoverHead;
@@ -34,10 +39,14 @@ public class MediaPlaybackFragment extends Fragment {
     private TextView mTVSongAlbumHead;
     private ImageButton mBTBackToList;
     private TextView mTVSongDuration;
-    private boolean mIsLand;
+    private ToggleButton mTBPlaySong;
+    private TextView mTVSongCurrentTime;
+    private SeekBar mSBSongProgress;
 
+    private boolean mIsLand;
     private Song mCurrentSong;
     private ITransitionFragment mITransitionFragment;
+    private CountDownTimer mTimer;
 
     public MediaPlaybackFragment() {}
 
@@ -67,6 +76,24 @@ public class MediaPlaybackFragment extends Fragment {
            mBTBackToList.setOnClickListener(v -> {
                getActivity().onBackPressed();
            });
+           mTBPlaySong = mRootView.findViewById(R.id.toggle_play_pause_bottom);
+           mTBPlaySong.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+               @Override
+               public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                   if (isChecked) {
+                       mITransitionFragment.pauseMusic();
+                       if (mTimer != null) {
+                           mTimer.cancel();
+                       }
+                   } else {
+                       mITransitionFragment.resumeMusic();
+                       setCountdownTimer(mCurrentSong.getDuration() - mITransitionFragment.getTimeCurrentPlay());
+                   }
+               }
+           });
+           mTVSongCurrentTime = mRootView.findViewById(R.id.tv_song_time_current_below);
+           mSBSongProgress = mRootView.findViewById(R.id.sb_progress);
+
            if (!mIsLand) {
                mBTBackToList.setVisibility(View.VISIBLE);
                mITransitionFragment.hideActionBar();
@@ -91,6 +118,22 @@ public class MediaPlaybackFragment extends Fragment {
         outState.putParcelable(KEY_PARCEL, mCurrentSong);
     }
 
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (mTimer != null) {
+            mTimer.cancel();
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (mTimer != null) {
+            setCountdownTimer(mCurrentSong.getDuration() - mITransitionFragment.getTimeCurrentPlay());
+        }
+    }
+
     public void setCurrentSong(Song song) {
         mCurrentSong = song;
     }
@@ -103,7 +146,6 @@ public class MediaPlaybackFragment extends Fragment {
 
     private void setCurrentView(Song song) {
         mCurrentSong = song;
-        Log.d("MinhNTn", "setCurrentView: " + mCurrentSong);
         byte[] cover = getArguments().getByteArray(KEY_COVER);
         String alName = getArguments().getString(KEY_ALBUM_NAME);
         Bitmap bitmap = BitmapFactory.decodeByteArray(cover, 0, cover.length);
@@ -112,5 +154,27 @@ public class MediaPlaybackFragment extends Fragment {
         mTVSongNameHead.setText(mCurrentSong.getTitle());
         mTVSongAlbumHead.setText(alName);
         mTVSongDuration.setText(mCurrentSong.getDurationTimeFormat());
+        mSBSongProgress.setMax((int) mCurrentSong.getDuration());
+        setCountdownTimer(mCurrentSong.getDuration());
+    }
+
+    public void setCountdownTimer(long duration) {
+        mTimer = new CountDownTimer(duration, 1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                int timeS = mITransitionFragment.getTimeCurrentPlay() / 1000;
+                int min = timeS / 60;
+                int sec = timeS % 60;
+                String timeFormat = String.format("%d:%d",min, sec);
+                mTVSongCurrentTime.setText(timeFormat);
+                mSBSongProgress.setProgress(mITransitionFragment.getTimeCurrentPlay());
+            }
+
+            @Override
+            public void onFinish() {
+
+            }
+        };
+        mTimer.start();
     }
 }

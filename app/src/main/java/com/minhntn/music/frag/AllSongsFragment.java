@@ -12,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.ToggleButton;
@@ -91,6 +92,10 @@ public class AllSongsFragment extends Fragment implements ICallBack {
     @Override
     public void displayNowPlayingView(int position) {
         mCurrentIndexSong = position;
+        if (mCurrentIndexSong != -1) {
+            iTransitionFragment.playMusic(mCurrentIndexSong);
+            iTransitionFragment.startService();
+        }
         if (!mIsLand) {
             if (mCurrentIndexSong != -1) {
                 Song currentSong = mListSong.get(position);
@@ -98,6 +103,16 @@ public class AllSongsFragment extends Fragment implements ICallBack {
                 mNowPlayingView.setVisibility(View.VISIBLE);
                 TextView name = mNowPlayingView.findViewById(R.id.tv_song_name_now_playing);
                 ToggleButton buttonPlay = mNowPlayingView.findViewById(R.id.toggle_play_pause);
+                buttonPlay.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        if (isChecked) {
+                            iTransitionFragment.pauseMusic();
+                        } else {
+                            iTransitionFragment.resumeMusic();
+                        }
+                    }
+                });
 
                 String nameDisplay = (currentSong.getTitle().length() < lengthAllow)? currentSong.getTitle()
                         : currentSong.getTitle().substring(0, lengthAllow - 3) + "..";

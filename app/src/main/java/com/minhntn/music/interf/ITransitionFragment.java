@@ -7,4 +7,9 @@ public interface ITransitionFragment {
     void transition(int position);
     void hideActionBar();
     void passCurrentPositionIfPortrait(int position);
+    void playMusic(int position);
+    void pauseMusic();
+    void resumeMusic();
+    int getTimeCurrentPlay();
+    void startService();
 }
