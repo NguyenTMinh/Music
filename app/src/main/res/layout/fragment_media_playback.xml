@@ -120,7 +120,7 @@
                 android:scaleType="centerCrop"
                 android:scaleX="0.8"
                 android:scaleY="0.8"
-                android:src="@drawable/ic_fwd_dark" />
+                android:src="@drawable/button_fwd" />
 
             <ImageButton
                 android:id="@+id/bt_rew"
@@ -134,7 +134,7 @@
                 android:scaleType="centerCrop"
                 android:scaleX="0.8"
                 android:scaleY="0.8"
-                android:src="@drawable/ic_rew_dark" />
+                android:src="@drawable/button_rew" />
 
             <ToggleButton
                 android:id="@+id/toggle_like"
