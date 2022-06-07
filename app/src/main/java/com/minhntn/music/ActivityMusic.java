@@ -113,15 +113,19 @@ public class ActivityMusic extends AppCompatActivity implements ITransitionFragm
         }
         mMediaPlaybackFragment.setArguments(bundle);
 
+        Log.d("MinhNTn", "onCreate: " + getSupportActionBar().isShowing());
         if (mIsLand) {
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    getSupportActionBar().show();
+                }
+            }, 100);
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mMediaPlaybackFragment,
                     MediaPlaybackFragment.FRAGMENT_TAG).commit();
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container_1, mAllSongsFragment,
                     AllSongsFragment.FRAGMENT_TAG).commit();
             if (savedInstanceState != null) {
-                if (!getSupportActionBar().isShowing()) {
-                    getSupportActionBar().show();
-                }
                 if (mIndexCurrentSong != -1) {
                     transition(mIndexCurrentSong);
                 }
@@ -187,35 +191,35 @@ public class ActivityMusic extends AppCompatActivity implements ITransitionFragm
 
         FragmentManager fragManager = getSupportFragmentManager();
 
-//        if (fragManager.getBackStackEntryCount() == 0 && !mIsLand) {
-//            mMediaPlaybackFragment.setCurrentSong(song);
-//            mMediaPlaybackFragment.setArguments(bundle);
-//
-//            FragmentTransaction transaction =  fragManager.beginTransaction();
-//            transaction.setCustomAnimations(R.anim.enter_from_bottom, R.anim.slowly_disappear, 0, R.anim.exit_to_bottom)
-//                    .replace(R.id.fragment_container, mMediaPlaybackFragment, MediaPlaybackFragment.FRAGMENT_TAG)
-//                    .commit();
-//        } else {
-//            if (fragManager.getBackStackEntryCount() == 0) {
-//                mMediaPlaybackFragment.setCurrentSong(song);
-//                mMediaPlaybackFragment.setArguments(bundle);
-//
-//                FragmentTransaction transaction =  fragManager.beginTransaction();
-//                transaction.setCustomAnimations(R.anim.enter_from_bottom, R.anim.slowly_disappear, 0, R.anim.exit_to_bottom)
-//                        .replace(R.id.fragment_container, mMediaPlaybackFragment, MediaPlaybackFragment.FRAGMENT_TAG)
-//                        .commit();
-//            } else {
-//
-//                mMediaPlaybackFragment.setArguments(bundle);
-//                mMediaPlaybackFragment.setCurrentSong(song);
-//                mMediaPlaybackFragment.onUpdateCurrentView();
-//
-//                FragmentTransaction transaction =  fragManager.beginTransaction();
-//                transaction.setCustomAnimations(R.anim.enter_from_bottom, R.anim.slowly_disappear, 0, R.anim.exit_to_bottom)
-//                        .replace(R.id.fragment_container, mMediaPlaybackFragment, MediaPlaybackFragment.FRAGMENT_TAG)
-//                        .commit();
-//            }
-//        }
+    /*  if (fragManager.getBackStackEntryCount() == 0 && !mIsLand) {
+            mMediaPlaybackFragment.setCurrentSong(song);
+            mMediaPlaybackFragment.setArguments(bundle);
+
+            FragmentTransaction transaction =  fragManager.beginTransaction();
+            transaction.setCustomAnimations(R.anim.enter_from_bottom, R.anim.slowly_disappear, 0, R.anim.exit_to_bottom)
+                    .replace(R.id.fragment_container, mMediaPlaybackFragment, MediaPlaybackFragment.FRAGMENT_TAG)
+                    .commit();
+        } else {
+            if (fragManager.getBackStackEntryCount() == 0) {
+                mMediaPlaybackFragment.setCurrentSong(song);
+                mMediaPlaybackFragment.setArguments(bundle);
+
+                FragmentTransaction transaction =  fragManager.beginTransaction();
+                transaction.setCustomAnimations(R.anim.enter_from_bottom, R.anim.slowly_disappear, 0, R.anim.exit_to_bottom)
+                        .replace(R.id.fragment_container, mMediaPlaybackFragment, MediaPlaybackFragment.FRAGMENT_TAG)
+                        .commit();
+            } else {
+
+                mMediaPlaybackFragment.setArguments(bundle);
+                mMediaPlaybackFragment.setCurrentSong(song);
+                mMediaPlaybackFragment.onUpdateCurrentView();
+
+                FragmentTransaction transaction =  fragManager.beginTransaction();
+                transaction.setCustomAnimations(R.anim.enter_from_bottom, R.anim.slowly_disappear, 0, R.anim.exit_to_bottom)
+                        .replace(R.id.fragment_container, mMediaPlaybackFragment, MediaPlaybackFragment.FRAGMENT_TAG)
+                        .commit();
+            }
+        }*/
 
         if (mIsLand) {
             mMediaPlaybackFragment.setCurrentSong(song);
@@ -227,9 +231,8 @@ public class ActivityMusic extends AppCompatActivity implements ITransitionFragm
                 }
             }, 150);
         } else {
+            hideActionBar();
             mMediaPlaybackFragment.setArguments(bundle);
-            Log.d("MinhNTn", "transition: " + song);
-
             FragmentTransaction transaction =  fragManager.beginTransaction();
             transaction.setCustomAnimations(R.anim.enter_from_bottom, R.anim.slowly_disappear, 0, R.anim.exit_to_bottom)
                     .replace(R.id.fragment_container, mMediaPlaybackFragment, MediaPlaybackFragment.FRAGMENT_TAG)
