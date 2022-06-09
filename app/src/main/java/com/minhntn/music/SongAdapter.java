@@ -99,4 +99,41 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
             notifyItemChanged(mIndex);
         }
     }
+
+    public void playNextSongIfViewHolderNull() {
+        if (mIndex != -1) {
+            Song song = mListSong.get(mIndex);
+            song.setPlaying(false);
+            notifyItemChanged(mIndex);
+        }
+        mIndex++;
+        if (mIndex >= mListSong.size()) {
+            mIndex = 0;
+        }
+
+        Song songCurrent = mListSong.get(mIndex);
+        songCurrent.setPlaying(true);
+        mICallBack.setStatePlay(true);
+        mICallBack.displayNowPlayingView(mIndex);
+        notifyItemChanged(mIndex);
+    }
+
+    public void playPreviousSongIfViewHolderNull() {
+        if (mIndex != -1) {
+            Song song = mListSong.get(mIndex);
+            song.setPlaying(false);
+            notifyItemChanged(mIndex);
+        }
+        mIndex--;
+        if (mIndex < 0) {
+            mIndex = mListSong.size() -1;
+        }
+
+        Song songCurrent = mListSong.get(mIndex);
+        songCurrent.setPlaying(true);
+        mICallBack.setStatePlay(true);
+        mICallBack.displayNowPlayingView(mIndex);
+        notifyItemChanged(mIndex);
+    }
+
 }

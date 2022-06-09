@@ -15,6 +15,7 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -30,6 +31,7 @@ import com.minhntn.music.interf.ICommunicate;
 import com.minhntn.music.interf.IDoInAsyncTask;
 import com.minhntn.music.model.Album;
 import com.minhntn.music.model.Song;
+import com.minhntn.music.prov.MusicContacts;
 import com.minhntn.music.serv.MediaPlaybackService;
 
 import java.util.ArrayList;
@@ -54,6 +56,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
     private MediaPlaybackService mService;
     private boolean mIsServiceBound;
     private boolean mIsPlaying;
+    private SharedPreferences mSharedPreferences;
 
     private IDoInAsyncTask mIDoInAsyncTask = new IDoInAsyncTask() {
         @Override
@@ -81,6 +84,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
         public void onServiceConnected(ComponentName name, IBinder service) {
             MediaPlaybackService.MediaBinder binder = (MediaPlaybackService.MediaBinder) service;
             mService = binder.getService();
+            mService.setICommunicate(ActivityMusic.this);
             mIsServiceBound = true;
         }
 
@@ -94,6 +98,8 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mSharedPreferences = getSharedPreferences(MusicContacts.SHARED_PREF_NAME, MODE_PRIVATE);
         
         if (savedInstanceState != null) {
             mMusicDBHelper = new MusicDBHelper(this);
@@ -106,6 +112,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
             checkAppPermission();
             mListSong = mMusicDBHelper.getAllSongs();
             mListAlbum = mMusicDBHelper.getAllAlbums();
+            mIndexCurrentSong = mSharedPreferences.getInt(MusicContacts.PREF_SONG_CURRENT, -1);
         }
 
         mIsLand = getResources().getBoolean(R.bool.is_land);
@@ -209,7 +216,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
             getSupportActionBar().show();
         }
         if (mIsLand) {
-            finish();
+            super.onBackPressed();
         } else {
             super.onBackPressed();
             mAllSongsFragment.setButtonState(mService.isMediaPlaying());
@@ -221,13 +228,24 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
         LocalBroadcastManager.getInstance(this)
                 .unregisterReceiver(mBroadcastReceiver);
         unbindService(mServiceConnection);
+
         super.onDestroy();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        mIsPlaying = mService.isMediaPlaying();
+        if (mService != null) {
+            mIsPlaying = mService.isMediaPlaying();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (mIndexCurrentSong != -1) {
+            onResumeFromBackScreen();
+        }
     }
 
     @Override
@@ -261,14 +279,13 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
         }
     }
 
-    /**
-     * These override methods below is the method of ICommunicate interface
-     */
-    @Override
-    public void transition(int position) {
-        mIndexCurrentSong = position;
-        Song song = mListSong.get(mIndexCurrentSong);
+    public void onResumeFromBackScreen() {
+        mAllSongsFragment.onResumeFromScreen(mIndexCurrentSong);
+    }
+
+    private Bundle getArgumentsSetToFrag() {
         Bundle bundle = new Bundle();
+        Song song = mListSong.get(mIndexCurrentSong);
         byte[] cover = new byte[1];
         String albumName = "";
         for (int i =0; i < mListAlbum.size(); i++) {
@@ -281,12 +298,29 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
         bundle.putByteArray(MediaPlaybackFragment.KEY_COVER, cover);
         bundle.putString(MediaPlaybackFragment.KEY_ALBUM_NAME, albumName);
         bundle.putBoolean(KEY_IS_LAND, mIsLand);
+        bundle.putBoolean(KEY_MUSIC_PLAYING, mIsPlaying);
+        return bundle;
+    }
+
+    /**
+     * These override methods below is the method of ICommunicate interface
+     */
+    @Override
+    public void transition(int position) {
+        mIndexCurrentSong = position;
+
+        SharedPreferences.Editor editor = mSharedPreferences.edit();
+        editor.putInt(MusicContacts.PREF_SONG_CURRENT, mIndexCurrentSong);
+        editor.apply();
+
+        Bundle bundle = getArgumentsSetToFrag();
+        Song song = mListSong.get(mIndexCurrentSong);
 
         FragmentManager fragManager = getSupportFragmentManager();
 
         if (mIsLand) {
-            mMediaPlaybackFragment.setCurrentSong(song);
             mMediaPlaybackFragment.setArguments(bundle);
+            mMediaPlaybackFragment.setCurrentSong(song);
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -312,12 +346,28 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
 
     @Override
     public void hideActionBar() {
-        getSupportActionBar().hide();
+        if (getSupportActionBar().isShowing()) {
+            getSupportActionBar().hide();
+        }
     }
 
     @Override
     public void passCurrentPositionIfPortrait(int position) {
         mIndexCurrentSong = position;
+        SharedPreferences.Editor editor = mSharedPreferences.edit();
+        editor.putInt(MusicContacts.PREF_SONG_CURRENT, mIndexCurrentSong);
+        editor.apply();
+        if (mMediaPlaybackFragment.getContext() != null) {
+            Bundle bundle = getArgumentsSetToFrag();
+            mMediaPlaybackFragment.setArguments(bundle);
+            mMediaPlaybackFragment.setCurrentSong(mListSong.get(mIndexCurrentSong));
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    mMediaPlaybackFragment.onUpdateCurrentView(mListSong.get(mIndexCurrentSong));
+                }
+            }, 150);
+        }
     }
 
     @Override
@@ -364,6 +414,27 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
     @Override
     public boolean isMusicPlaying() {
         return mService.isMediaPlaying();
+    }
+
+    @Override
+    public void playNextSong() {
+        mAllSongsFragment.nextSong();
+    }
+
+    @Override
+    public void playPreviousSong() {
+        if (mService != null) {
+            if (mService.getCurrentTimeSong() > 3000) {
+                mService.seekPlayTimeTo(0);
+            } else {
+                mAllSongsFragment.previousSong();
+            }
+        }
+    }
+
+    @Override
+    public void setStatePlaying(boolean state) {
+        mIsPlaying = state;
     }
 
 }

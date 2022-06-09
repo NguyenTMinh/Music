@@ -14,4 +14,7 @@ public interface ICommunicate {
     void startService();
     void seekTimeTo(int time);
     boolean isMusicPlaying();
+    void playNextSong();
+    void playPreviousSong();
+    void setStatePlaying(boolean state);
 }

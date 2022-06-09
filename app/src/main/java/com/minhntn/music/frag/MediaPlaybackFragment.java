@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,6 +25,7 @@ import com.minhntn.music.ActivityMusic;
 import com.minhntn.music.R;
 import com.minhntn.music.interf.ICommunicate;
 import com.minhntn.music.model.Song;
+import com.minhntn.music.serv.MediaPlaybackService;
 
 public class MediaPlaybackFragment extends Fragment {
     public static final String FRAGMENT_TAG = "MediaPlaybackFragment";
@@ -41,8 +43,11 @@ public class MediaPlaybackFragment extends Fragment {
     private ToggleButton mTBPlaySong;
     private TextView mTVSongCurrentTime;
     private SeekBar mSBSongProgress;
+    private ImageButton mIBForward;
+    private ImageButton mIBPrevious;
 
     private boolean mIsLand;
+    private boolean mIsPlaying;
     private Song mCurrentSong;
     private ICommunicate mICommunicate;
     private CountDownTimer mTimer;
@@ -61,9 +66,10 @@ public class MediaPlaybackFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         mIsLand = getArguments().getBoolean(ActivityMusic.KEY_IS_LAND, false);
+        mIsPlaying = getArguments().getBoolean(ActivityMusic.KEY_MUSIC_PLAYING, false);
         if (savedInstanceState != null){
             mCurrentSong = savedInstanceState.getParcelable(KEY_PARCEL);
-        }
+        } 
        if (mRootView == null) {
            mRootView = inflater.inflate(R.layout.fragment_media_playback, container, false);
            mIVBackground = mRootView.findViewById(R.id.iv_album_cover_large);
@@ -92,6 +98,14 @@ public class MediaPlaybackFragment extends Fragment {
            });
            mTVSongCurrentTime = mRootView.findViewById(R.id.tv_song_time_current_below);
            mSBSongProgress = mRootView.findViewById(R.id.sb_progress);
+           mIBForward = mRootView.findViewById(R.id.bt_fwd);
+           mIBForward.setOnClickListener(v -> {
+               mICommunicate.playNextSong();
+           });
+           mIBPrevious = mRootView.findViewById(R.id.bt_rew);
+           mIBPrevious.setOnClickListener(v -> {
+               mICommunicate.playPreviousSong();
+           });
 
            if (!mIsLand) {
                mBTBackToList.setVisibility(View.VISIBLE);
@@ -145,6 +159,7 @@ public class MediaPlaybackFragment extends Fragment {
     }
 
     private void setCurrentView(Song song) {
+        mIsPlaying = getArguments().getBoolean(ActivityMusic.KEY_MUSIC_PLAYING, false);
         mCurrentSong = song;
         byte[] cover = getArguments().getByteArray(KEY_COVER);
         String alName = getArguments().getString(KEY_ALBUM_NAME);
@@ -194,7 +209,7 @@ public class MediaPlaybackFragment extends Fragment {
 
             @Override
             public void onFinish() {
-                mTBPlaySong.setChecked(true);
+
             }
         };
 

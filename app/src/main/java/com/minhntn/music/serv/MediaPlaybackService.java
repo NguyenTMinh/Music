@@ -5,24 +5,34 @@ import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.IBinder;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
 
 import com.minhntn.music.ActivityMusic;
+import com.minhntn.music.interf.ICommunicate;
 import com.minhntn.music.model.Song;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MediaPlaybackService extends Service implements MediaPlayer.OnPreparedListener {
+public class MediaPlaybackService extends Service implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompletionListener {
+    public static final int NEXT_SONG = -2;
     private MediaPlayer mMediaPlayer;
     private List<Song> mSongList;
     private IBinder mBinder;
+    private int mCurrentSongIndex;
+    private ICommunicate mICommunicate;
 
     @Override
     public void onPrepared(MediaPlayer mp) {
         mp.start();
+    }
+
+    @Override
+    public void onCompletion(MediaPlayer mp) {
+        mICommunicate.playNextSong();
     }
 
     public class MediaBinder extends Binder {
@@ -41,7 +51,7 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        return START_STICKY;
+        return START_NOT_STICKY;
     }
 
     @Nullable
@@ -52,7 +62,18 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
     }
 
     public void playSong(int position) {
-        Song song = mSongList.get(position);
+        // Check the index of song should be played
+        if (position >= 0) {
+            mCurrentSongIndex = position;
+        } else {
+            if (position == NEXT_SONG) {
+                mCurrentSongIndex++;
+            } else {
+                mCurrentSongIndex = 0;
+            }
+        }
+        Song song = mSongList.get(mCurrentSongIndex);
+
         try {
             if (mMediaPlayer.isPlaying()){
                 mMediaPlayer.pause();
@@ -60,6 +81,7 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
             }
             mMediaPlayer.reset();
             mMediaPlayer.setDataSource(this, song.getUri());
+            mMediaPlayer.setOnCompletionListener(this);
             mMediaPlayer.setOnPreparedListener(this);
             mMediaPlayer.prepareAsync();
         } catch (IOException e) {
@@ -87,5 +109,9 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
 
     public boolean isMediaPlaying() {
         return mMediaPlayer.isPlaying();
+    }
+
+    public void setICommunicate(ICommunicate iCommunicate) {
+        mICommunicate = iCommunicate;
     }
 }
