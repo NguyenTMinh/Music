@@ -51,18 +51,24 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        mSongList = intent.getParcelableArrayListExtra(ActivityMusic.KEY_LIST_SONG);
+        if (mSongList == null || mSongList.size() == 0) {
+            mSongList = intent.getParcelableArrayListExtra(ActivityMusic.KEY_LIST_SONG);
+        }
+        Log.d("minhntn", "onStartCommand: " + mSongList);
         return START_NOT_STICKY;
     }
 
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-        mSongList = intent.getParcelableArrayListExtra(ActivityMusic.KEY_LIST_SONG);
+        if (mSongList == null) {
+            mSongList = intent.getParcelableArrayListExtra(ActivityMusic.KEY_LIST_SONG);
+        }
         return mBinder;
     }
 
     public void playSong(int position) {
+        Log.d("minhntn", "playSong: " + mSongList);
         // Check the index of song should be played
         if (position >= 0) {
             mCurrentSongIndex = position;

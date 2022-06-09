@@ -77,6 +77,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
                 intent.putParcelableArrayListExtra(KEY_LIST_SONG, (ArrayList<? extends Parcelable>) mListSong);
                 startService(intent);
                 bindService(intent, mServiceConnection, Service.BIND_AUTO_CREATE);
+                Log.d("minhntn", "onPostExecute: bind");
             }
 
         }

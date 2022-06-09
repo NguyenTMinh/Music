@@ -26,7 +26,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_marginTop="8dp"
-            android:text="Frozen"
+            android:text="@string/unknown"
             android:textAppearance="@style/TextAppearance.AppCompat.Title" />
 
         <TextView
@@ -35,7 +35,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_marginBottom="8dp"
-            android:text="2"
+            android:text="@string/unknown"
             android:textSize="16sp" />
     </LinearLayout>
 
