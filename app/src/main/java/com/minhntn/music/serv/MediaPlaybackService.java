@@ -51,6 +51,7 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        mSongList = intent.getParcelableArrayListExtra(ActivityMusic.KEY_LIST_SONG);
         return START_NOT_STICKY;
     }
 

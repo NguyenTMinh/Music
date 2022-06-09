@@ -70,9 +70,12 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
             mListAlbum = mMusicDBHelper.getAllAlbums();
             mAllSongsFragment.notifyAdapter(mListSong);
 
+            Log.d("MinhNTn", "onPostExecute: "+ mListSong.size());
+
             if (mListSong.size() > 0) {
                 Intent intent = new Intent(ActivityMusic.this, MediaPlaybackService.class);
                 intent.putParcelableArrayListExtra(KEY_LIST_SONG, (ArrayList<? extends Parcelable>) mListSong);
+                startService(intent);
                 bindService(intent, mServiceConnection, Service.BIND_AUTO_CREATE);
             }
 
@@ -228,7 +231,6 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
         LocalBroadcastManager.getInstance(this)
                 .unregisterReceiver(mBroadcastReceiver);
         unbindService(mServiceConnection);
-
         super.onDestroy();
     }
 
@@ -280,7 +282,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
     }
 
     public void onResumeFromBackScreen() {
-        mAllSongsFragment.onResumeFromScreen(mIndexCurrentSong);
+        //mAllSongsFragment.onResumeFromScreen(mIndexCurrentSong);
     }
 
     private Bundle getArgumentsSetToFrag() {
@@ -413,7 +415,10 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
 
     @Override
     public boolean isMusicPlaying() {
-        return mService.isMediaPlaying();
+        if (mService != null) {
+            return mService.isMediaPlaying();
+        }
+        return false;
     }
 
     @Override

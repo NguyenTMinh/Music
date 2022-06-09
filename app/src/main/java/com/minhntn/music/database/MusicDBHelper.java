@@ -9,6 +9,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.MediaMetadataRetriever;
 import android.provider.MediaStore;
+import android.util.Log;
 
 import com.minhntn.music.R;
 import com.minhntn.music.model.Album;
@@ -162,9 +163,12 @@ public class MusicDBHelper extends SQLiteOpenHelper {
             int albumId = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID));
             String albumName2 = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM));
 
-
             MediaMetadataRetriever mmr = new MediaMetadataRetriever();
-            mmr.setDataSource(songUri);
+            try {
+                mmr.setDataSource(songUri);
+            } catch (IllegalArgumentException e) {
+                e.printStackTrace();
+            }
 
             byte[] imageCover = mmr.getEmbeddedPicture();
             if (imageCover == null) {
