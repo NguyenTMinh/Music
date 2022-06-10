@@ -6,8 +6,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,7 +22,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.minhntn.music.ActivityMusic;
 import com.minhntn.music.R;
-import com.minhntn.music.SongAdapter;
+import com.minhntn.music.adapter.SongAdapter;
 import com.minhntn.music.interf.ICallBack;
 import com.minhntn.music.interf.ICommunicate;
 import com.minhntn.music.model.Song;
@@ -78,7 +76,7 @@ public class AllSongsFragment extends Fragment implements ICallBack {
 
             if (!mIsLand && savedInstanceState != null) {
                 if (mListSong != null) {
-                    displayNowPlayingView(mCurrentIndexSong);
+                    displayNowPlayingView(mCurrentIndexSong, true);
                 }
             }
 
@@ -95,33 +93,32 @@ public class AllSongsFragment extends Fragment implements ICallBack {
     }
 
     @Override
-    public void displayNowPlayingView(int position) {
+    public void displayNowPlayingView(int position, boolean isClicked) {
         mCurrentIndexSong = position;
-        if (mCurrentIndexSong != -1) {
-            if (!mIsFromPause) {
-                mICommunicate.playMusic(mCurrentIndexSong);
-                mICommunicate.startService();
-            }
-        }
         if (!mIsLand) {
             if (mCurrentIndexSong != -1) {
                 Song currentSong = mListSong.get(position);
                 int lengthAllow = getResources().getInteger(R.integer.length_in_line);
                 mNowPlayingView.setVisibility(View.VISIBLE);
                 TextView name = mNowPlayingView.findViewById(R.id.tv_song_name_now_playing);
-                mTBPlaySongBottom = mNowPlayingView.findViewById(R.id.toggle_play_pause);
+                if (mTBPlaySongBottom == null) {
+                    mTBPlaySongBottom = mNowPlayingView.findViewById(R.id.toggle_play_pause);
+                }
                 mTBPlaySongBottom.forceLayout();
                 mTBPlaySongBottom.setChecked(!mIsPlaying);
-                mTBPlaySongBottom.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                    @Override
-                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                        if (isChecked) {
-                            mICommunicate.pauseMusic();
-                        } else {
-                            mICommunicate.resumeMusic();
+
+                if (isClicked) {
+                    mTBPlaySongBottom.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                        @Override
+                        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                            if (isChecked) {
+                                mICommunicate.pauseMusic();
+                            } else {
+                                mICommunicate.resumeMusic();
+                            }
                         }
-                    }
-                });
+                    });
+                }
 
                 String nameDisplay = (currentSong.getTitle().length() < lengthAllow)? currentSong.getTitle()
                         : currentSong.getTitle().substring(0, lengthAllow - 3) + "..";
@@ -131,6 +128,13 @@ public class AllSongsFragment extends Fragment implements ICallBack {
             mICommunicate.passCurrentPositionIfPortrait(position);
         } else {
             mICommunicate.transition(mCurrentIndexSong);
+        }
+
+        // start playing music
+        if (mCurrentIndexSong != -1) {
+            if (!mIsFromPause) {
+                mICommunicate.playMusic(mCurrentIndexSong);
+            }
         }
     }
 
@@ -189,7 +193,7 @@ public class AllSongsFragment extends Fragment implements ICallBack {
 
     public void onResumeFromScreen(int position) {
         mIsFromPause = true;
-        displayNowPlayingView(position);
+        displayNowPlayingView(position, false);
         mRVSongs.smoothScrollToPosition(position);
     }
 

@@ -70,14 +70,11 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
             mListAlbum = mMusicDBHelper.getAllAlbums();
             mAllSongsFragment.notifyAdapter(mListSong);
 
-            Log.d("MinhNTn", "onPostExecute: "+ mListSong.size());
-
             if (mListSong.size() > 0) {
                 Intent intent = new Intent(ActivityMusic.this, MediaPlaybackService.class);
                 intent.putParcelableArrayListExtra(KEY_LIST_SONG, (ArrayList<? extends Parcelable>) mListSong);
                 startService(intent);
                 bindService(intent, mServiceConnection, Service.BIND_AUTO_CREATE);
-                Log.d("minhntn", "onPostExecute: bind");
             }
 
         }
@@ -249,6 +246,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
         if (mIndexCurrentSong != -1) {
             onResumeFromBackScreen();
         }
+        Log.d("MinhNTn", "onResume: " + mService);
     }
 
     @Override
@@ -283,7 +281,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
     }
 
     public void onResumeFromBackScreen() {
-        //mAllSongsFragment.onResumeFromScreen(mIndexCurrentSong);
+        mAllSongsFragment.onResumeFromScreen(mIndexCurrentSong);
     }
 
     private Bundle getArgumentsSetToFrag() {
@@ -375,6 +373,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
 
     @Override
     public void playMusic(int position) {
+        Log.d("MinhNTn", "playMusic: " + mService);
         if (mService != null){
             mService.playSong(position);
         }

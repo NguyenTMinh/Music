@@ -54,7 +54,6 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
         if (mSongList == null || mSongList.size() == 0) {
             mSongList = intent.getParcelableArrayListExtra(ActivityMusic.KEY_LIST_SONG);
         }
-        Log.d("minhntn", "onStartCommand: " + mSongList);
         return START_NOT_STICKY;
     }
 
@@ -68,7 +67,6 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
     }
 
     public void playSong(int position) {
-        Log.d("minhntn", "playSong: " + mSongList);
         // Check the index of song should be played
         if (position >= 0) {
             mCurrentSongIndex = position;
@@ -88,9 +86,9 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
             }
             mMediaPlayer.reset();
             mMediaPlayer.setDataSource(this, song.getUri());
-            mMediaPlayer.setOnCompletionListener(this);
             mMediaPlayer.setOnPreparedListener(this);
             mMediaPlayer.prepareAsync();
+            mMediaPlayer.setOnCompletionListener(this);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -103,7 +101,9 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
     }
 
     public void resumeSong() {
-        mMediaPlayer.start();
+        if (!mMediaPlayer.isPlaying()) {
+            mMediaPlayer.start();
+        }
     }
 
     public int getCurrentTimeSong() {
