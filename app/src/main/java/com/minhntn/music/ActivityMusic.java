@@ -24,6 +24,7 @@ import android.os.Parcelable;
 import android.util.Log;
 import android.view.Menu;
 
+import com.minhntn.music.app.MyApplication;
 import com.minhntn.music.database.MusicDBHelper;
 import com.minhntn.music.frag.AllSongsFragment;
 import com.minhntn.music.frag.MediaPlaybackFragment;
@@ -70,30 +71,32 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
             mListAlbum = mMusicDBHelper.getAllAlbums();
             mAllSongsFragment.notifyAdapter(mListSong);
 
-            if (mListSong.size() > 0) {
-                Intent intent = new Intent(ActivityMusic.this, MediaPlaybackService.class);
-                intent.putParcelableArrayListExtra(KEY_LIST_SONG, (ArrayList<? extends Parcelable>) mListSong);
-                startService(intent);
-                bindService(intent, mServiceConnection, Service.BIND_AUTO_CREATE);
-            }
+//            if (mListSong.size() > 0) {
+//                Intent intent = new Intent(ActivityMusic.this, MediaPlaybackService.class);
+//                intent.putParcelableArrayListExtra(KEY_LIST_SONG, (ArrayList<? extends Parcelable>) mListSong);
+//                startService(intent);
+//                bindService(intent, mServiceConnection, Service.BIND_AUTO_CREATE);
+//            }
 
         }
     };
 
-    private ServiceConnection mServiceConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            MediaPlaybackService.MediaBinder binder = (MediaPlaybackService.MediaBinder) service;
-            mService = binder.getService();
-            mService.setICommunicate(ActivityMusic.this);
-            mIsServiceBound = true;
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            mIsServiceBound = false;
-        }
-    };
+    private ServiceConnection mServiceConnection;
+//            = new ServiceConnection() {
+//
+//        @Override
+//        public void onServiceConnected(ComponentName name, IBinder service) {
+//            MediaPlaybackService.MediaBinder binder = (MediaPlaybackService.MediaBinder) service;
+//            mService = binder.getService();
+//            mService.setICommunicate(ActivityMusic.this);
+//            mIsServiceBound = true;
+//        }
+//
+//        @Override
+//        public void onServiceDisconnected(ComponentName name) {
+//            mIsServiceBound = false;
+//        }
+//    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,6 +104,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
         setContentView(R.layout.activity_main);
 
         mSharedPreferences = getSharedPreferences(MusicContacts.SHARED_PREF_NAME, MODE_PRIVATE);
+        mServiceConnection = MyApplication.getServiceConnection();
         
         if (savedInstanceState != null) {
             mMusicDBHelper = new MusicDBHelper(this);
@@ -175,11 +179,12 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
         LocalBroadcastManager.getInstance(this)
                 .registerReceiver(mBroadcastReceiver, intentFilter);
 
-        if (mListSong.size() > 0) {
-            Intent intent = new Intent(ActivityMusic.this, MediaPlaybackService.class);
-            intent.putParcelableArrayListExtra(KEY_LIST_SONG, (ArrayList<? extends Parcelable>) mListSong);
-            bindService(intent, mServiceConnection, Service.BIND_AUTO_CREATE);
-        }
+//        if (mListSong.size() > 0) {
+//            Intent intent = new Intent(ActivityMusic.this, MediaPlaybackService.class);
+//            intent.putParcelableArrayListExtra(KEY_LIST_SONG, (ArrayList<? extends Parcelable>) mListSong);
+//            bindService(intent, mServiceConnection, Service.BIND_AUTO_CREATE);
+//        }
+
 
     }
 
@@ -246,7 +251,6 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
         if (mIndexCurrentSong != -1) {
             onResumeFromBackScreen();
         }
-        Log.d("MinhNTn", "onResume: " + mService);
     }
 
     @Override
