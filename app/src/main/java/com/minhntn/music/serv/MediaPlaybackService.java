@@ -3,6 +3,7 @@ package com.minhntn.music.serv;
 import android.app.Service;
 import android.content.Intent;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
@@ -51,18 +52,14 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (mSongList == null || mSongList.size() == 0) {
-            mSongList = intent.getParcelableArrayListExtra(ActivityMusic.KEY_LIST_SONG);
-        }
+        mSongList = intent.getParcelableArrayListExtra(ActivityMusic.KEY_LIST_SONG);
         return START_NOT_STICKY;
     }
 
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-        if (mSongList == null) {
-            mSongList = intent.getParcelableArrayListExtra(ActivityMusic.KEY_LIST_SONG);
-        }
+        mSongList = intent.getParcelableArrayListExtra(ActivityMusic.KEY_LIST_SONG);
         return mBinder;
     }
 
@@ -77,19 +74,24 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
                 mCurrentSongIndex = 0;
             }
         }
-        Song song = mSongList.get(mCurrentSongIndex);
-
         try {
-            if (mMediaPlayer.isPlaying()){
-                mMediaPlayer.pause();
-                mMediaPlayer.stop();
+            Song song = mSongList.get(mCurrentSongIndex);
+            try {
+                if (mMediaPlayer.isPlaying()){
+                    mMediaPlayer.pause();
+                    mMediaPlayer.stop();
+                }
+
+                mMediaPlayer.reset();
+                mMediaPlayer.setDataSource(this, song.getUri());
+                mMediaPlayer.setOnPreparedListener(this);
+                mMediaPlayer.prepareAsync();
+                mMediaPlayer.setOnCompletionListener(this);
+
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            mMediaPlayer.reset();
-            mMediaPlayer.setDataSource(this, song.getUri());
-            mMediaPlayer.setOnPreparedListener(this);
-            mMediaPlayer.prepareAsync();
-            mMediaPlayer.setOnCompletionListener(this);
-        } catch (IOException e) {
+        } catch (IndexOutOfBoundsException e) {
             e.printStackTrace();
         }
     }
@@ -120,5 +122,17 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
 
     public void setICommunicate(ICommunicate iCommunicate) {
         mICommunicate = iCommunicate;
+    }
+
+    public void setMediaUriSource(int index) {
+        Song song = mSongList.get(index);
+        try {
+            mMediaPlayer.reset();
+            mMediaPlayer.setDataSource(this, song.getUri());
+            mMediaPlayer.prepareAsync();
+            mMediaPlayer.setOnCompletionListener(this);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

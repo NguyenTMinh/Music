@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -106,7 +107,6 @@ public class AllSongsFragment extends Fragment implements ICallBack {
                 }
                 mTBPlaySongBottom.forceLayout();
                 mTBPlaySongBottom.setChecked(!mIsPlaying);
-
                 if (isClicked) {
                     mTBPlaySongBottom.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                         @Override
@@ -193,7 +193,7 @@ public class AllSongsFragment extends Fragment implements ICallBack {
 
     public void onResumeFromScreen(int position) {
         mIsFromPause = true;
-        displayNowPlayingView(position, false);
+        displayNowPlayingView(position, true);
         mRVSongs.smoothScrollToPosition(position);
     }
 

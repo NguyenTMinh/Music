@@ -3,13 +3,15 @@ package com.minhntn.music.app;
 import android.app.Application;
 import android.content.Intent;
 
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleObserver;
+import androidx.lifecycle.OnLifecycleEvent;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.minhntn.music.MyAsyncTask;
 import com.minhntn.music.MyBroadcastReceiver;
 import com.minhntn.music.database.MusicDBHelper;
 import com.minhntn.music.interf.IDoInAsyncTask;
-
 
 public class MyApplication extends Application {
     private MusicDBHelper mDBHelper;
@@ -32,5 +34,4 @@ public class MyApplication extends Application {
         mDBHelper = new MusicDBHelper(this);
         new MyAsyncTask().execute(mIDoInAsyncTask);
     }
-
 }

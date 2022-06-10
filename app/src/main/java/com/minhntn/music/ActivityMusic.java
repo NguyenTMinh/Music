@@ -81,11 +81,13 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
     };
 
     private ServiceConnection mServiceConnection = new ServiceConnection() {
+
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             MediaPlaybackService.MediaBinder binder = (MediaPlaybackService.MediaBinder) service;
             mService = binder.getService();
             mService.setICommunicate(ActivityMusic.this);
+            mService.setMediaUriSource(mIndexCurrentSong);
             mIsServiceBound = true;
         }
 
@@ -101,7 +103,8 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
         setContentView(R.layout.activity_main);
 
         mSharedPreferences = getSharedPreferences(MusicContacts.SHARED_PREF_NAME, MODE_PRIVATE);
-        
+
+        checkAppPermission();
         if (savedInstanceState != null) {
             mMusicDBHelper = new MusicDBHelper(this);
             mListSong = savedInstanceState.getParcelableArrayList(KEY_LIST_SONG);
@@ -110,7 +113,6 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
             mIsPlaying = savedInstanceState.getBoolean(KEY_MUSIC_PLAYING, false);
         } else {
             mMusicDBHelper = new MusicDBHelper(this);
-            checkAppPermission();
             mListSong = mMusicDBHelper.getAllSongs();
             mListAlbum = mMusicDBHelper.getAllAlbums();
             mIndexCurrentSong = mSharedPreferences.getInt(MusicContacts.PREF_SONG_CURRENT, -1);
@@ -246,7 +248,6 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
         if (mIndexCurrentSong != -1) {
             onResumeFromBackScreen();
         }
-        Log.d("MinhNTn", "onResume: " + mService);
     }
 
     @Override
@@ -373,7 +374,6 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
 
     @Override
     public void playMusic(int position) {
-        Log.d("MinhNTn", "playMusic: " + mService);
         if (mService != null){
             mService.playSong(position);
         }
