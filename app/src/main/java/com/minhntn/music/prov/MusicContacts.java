@@ -3,7 +3,7 @@ package com.minhntn.music.prov;
 public class MusicContacts {
     public static final String SHARED_PREF_NAME = "com.minhntn.music.prov.spref";
     public static final String PREF_SONG_CURRENT = "PREF_SONG_CURRENT";
-    public static final String PREF_APP_CLOSED = "PREF_APP_CLOSED";
+    public static final String PREF_SONG_PLAY_MODE = "PREF_SONG_PLAY_MODE";
     public static final String PREF_IS_CREATED = "is_created";
     public static final String MUSIC_DB_NAME = "music.db";
     public static final int MUSIC_DB_VERSION = 1;

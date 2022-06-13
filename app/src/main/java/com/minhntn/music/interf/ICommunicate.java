@@ -16,5 +16,9 @@ public interface ICommunicate {
     boolean isMusicPlaying();
     void playNextSong();
     void playPreviousSong();
+    void playRandom();
+    void playRepeatOneSong();
     void setStatePlaying(boolean state);
+    void setModePlay(int modePlay);
+    void setPauseButton();
 }

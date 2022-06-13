@@ -29,6 +29,7 @@ import com.minhntn.music.interf.ICommunicate;
 import com.minhntn.music.model.Song;
 
 import java.util.List;
+import java.util.Random;
 
 public class AllSongsFragment extends Fragment implements ICallBack {
     public static final String FRAGMENT_TAG = "AllSongsFragment";
@@ -97,7 +98,7 @@ public class AllSongsFragment extends Fragment implements ICallBack {
     public void displayNowPlayingView(int position, boolean isClicked) {
         mCurrentIndexSong = position;
         if (!mIsLand) {
-            if (mCurrentIndexSong != -1) {
+            if (mCurrentIndexSong != -1 && getContext() != null) {
                 Song currentSong = mListSong.get(position);
                 int lengthAllow = getResources().getInteger(R.integer.length_in_line);
                 mNowPlayingView.setVisibility(View.VISIBLE);
@@ -188,6 +189,20 @@ public class AllSongsFragment extends Fragment implements ICallBack {
             viewHolder.onClick(viewHolder.itemView);
         } else {
             mSongAdapter.playPreviousSongIfViewHolderNull();
+        }
+    }
+
+    public void randomSong() {
+        int rand;
+        do {
+            rand = new Random().nextInt(mListSong.size());
+        }while (rand == mCurrentIndexSong);
+        mCurrentIndexSong = rand;
+        SongAdapter.SongViewHolder viewHolder = (SongAdapter.SongViewHolder) mRVSongs.findViewHolderForAdapterPosition(mCurrentIndexSong);
+        if (viewHolder != null) {
+            viewHolder.onClick(viewHolder.itemView);
+        } else {
+            mSongAdapter.playRandom(mCurrentIndexSong);
         }
     }
 

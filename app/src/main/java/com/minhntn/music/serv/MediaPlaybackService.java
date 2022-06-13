@@ -11,6 +11,7 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 
 import com.minhntn.music.ActivityMusic;
+import com.minhntn.music.frag.MediaPlaybackFragment;
 import com.minhntn.music.interf.ICommunicate;
 import com.minhntn.music.model.Song;
 
@@ -19,11 +20,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MediaPlaybackService extends Service implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompletionListener {
-    public static final int NEXT_SONG = -2;
     private MediaPlayer mMediaPlayer;
     private List<Song> mSongList;
     private IBinder mBinder;
     private int mCurrentSongIndex;
+    private int mCurrentModePlay;
     private ICommunicate mICommunicate;
 
     @Override
@@ -33,7 +34,29 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
 
     @Override
     public void onCompletion(MediaPlayer mp) {
-        mICommunicate.playNextSong();
+        switch (mCurrentModePlay) {
+            case MediaPlaybackFragment.PLAY_MODE_REPEAT_SINGLE: {
+                mp.start();
+                mICommunicate.playRepeatOneSong();
+                break;
+            }
+            case MediaPlaybackFragment.PLAY_MODE_SHUFFLE_ON: {
+                mICommunicate.playRandom();
+                break;
+            }
+            case MediaPlaybackFragment.PLAY_MODE_REPEAT_LIST: {
+                mICommunicate.playNextSong();
+                break;
+            }
+            case MediaPlaybackFragment.PLAY_MODE_DEFAULT: {
+                if (mCurrentSongIndex < mSongList.size() - 1) {
+                    mICommunicate.playNextSong();
+                } else {
+                    mICommunicate.setPauseButton();
+                }
+            }
+        }
+
     }
 
     public class MediaBinder extends Binder {
@@ -67,13 +90,8 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
         // Check the index of song should be played
         if (position >= 0) {
             mCurrentSongIndex = position;
-        } else {
-            if (position == NEXT_SONG) {
-                mCurrentSongIndex++;
-            } else {
-                mCurrentSongIndex = 0;
-            }
         }
+
         try {
             Song song = mSongList.get(mCurrentSongIndex);
             try {
@@ -125,7 +143,10 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
     }
 
     public void setMediaUriSource(int index) {
-        Song song = mSongList.get(index);
+        if (index != -1) {
+            mCurrentSongIndex = index;
+        }
+        Song song = mSongList.get(mCurrentSongIndex);
         try {
             mMediaPlayer.reset();
             mMediaPlayer.setDataSource(this, song.getUri());
@@ -134,5 +155,9 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public void setCurrentModePlay(int modePlay) {
+        mCurrentModePlay = modePlay;
     }
 }

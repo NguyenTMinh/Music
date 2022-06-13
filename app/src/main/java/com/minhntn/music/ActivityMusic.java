@@ -17,6 +17,7 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -43,6 +44,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
     public static final String KEY_LIST_SONG = "KEY_LIST_SONG";
     public static final String KEY_LIST_ALBUM = "KEY_LIST_ALBUM";
     public static final String KEY_MUSIC_PLAYING = "KEY_MUSIC_PLAYING";
+    public static final String KEY_SCREEN_ROTATE = "KEY_SCREEN_ROTATE";
 
     private static final int REQUEST_CODE = 1;
     private List<Song> mListSong;
@@ -57,6 +59,8 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
     private boolean mIsServiceBound;
     private boolean mIsPlaying;
     private SharedPreferences mSharedPreferences;
+    private boolean mIsRotated = false;
+    private int mCurrentPlayMode;
 
     private IDoInAsyncTask mIDoInAsyncTask = new IDoInAsyncTask() {
         @Override
@@ -87,7 +91,20 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
             MediaPlaybackService.MediaBinder binder = (MediaPlaybackService.MediaBinder) service;
             mService = binder.getService();
             mService.setICommunicate(ActivityMusic.this);
-            mService.setMediaUriSource(mIndexCurrentSong);
+            if (!mIsRotated) {
+                mService.setMediaUriSource(mIndexCurrentSong);
+            }
+            mService.setCurrentModePlay(mCurrentPlayMode);
+
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if (mService.isMediaPlaying()) {
+                        mAllSongsFragment.setButtonState(mService.isMediaPlaying());
+                    }
+                }
+            }, 150);
+            mIsRotated = true;
             mIsServiceBound = true;
         }
 
@@ -111,11 +128,16 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
             mListAlbum = savedInstanceState.getParcelableArrayList(KEY_LIST_ALBUM);
             mIndexCurrentSong = savedInstanceState.getInt(KEY_INDEX_CURRENT);
             mIsPlaying = savedInstanceState.getBoolean(KEY_MUSIC_PLAYING, false);
+            mIsRotated = savedInstanceState.getBoolean(KEY_SCREEN_ROTATE, false);
+            mCurrentPlayMode = savedInstanceState.getInt(MusicContacts.PREF_SONG_PLAY_MODE,
+                    MediaPlaybackFragment.PLAY_MODE_DEFAULT);
         } else {
             mMusicDBHelper = new MusicDBHelper(this);
             mListSong = mMusicDBHelper.getAllSongs();
             mListAlbum = mMusicDBHelper.getAllAlbums();
             mIndexCurrentSong = mSharedPreferences.getInt(MusicContacts.PREF_SONG_CURRENT, -1);
+            mCurrentPlayMode = mSharedPreferences.getInt(MusicContacts.PREF_SONG_PLAY_MODE,
+                    MediaPlaybackFragment.PLAY_MODE_DEFAULT);
         }
 
         mIsLand = getResources().getBoolean(R.bool.is_land);
@@ -123,6 +145,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
         Bundle bundle = new Bundle();
         bundle.putBoolean(KEY_IS_LAND, mIsLand);
         bundle.putBoolean(KEY_MUSIC_PLAYING, mIsPlaying);
+        bundle.putInt(MusicContacts.PREF_SONG_PLAY_MODE, mCurrentPlayMode);
 
         // Get the instance exists of the fragment
         mAllSongsFragment = (AllSongsFragment)
@@ -240,6 +263,9 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
         if (mService != null) {
             mIsPlaying = mService.isMediaPlaying();
         }
+        SharedPreferences.Editor editor = mSharedPreferences.edit();
+        editor.putInt(MusicContacts.PREF_SONG_PLAY_MODE, mCurrentPlayMode);
+        editor.apply();
     }
 
     @Override
@@ -262,6 +288,8 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
         outState.putParcelableArrayList(KEY_LIST_ALBUM, (ArrayList<? extends Parcelable>) mListAlbum);
         outState.putInt(KEY_INDEX_CURRENT, mIndexCurrentSong);
         outState.putBoolean(KEY_MUSIC_PLAYING, mIsPlaying);
+        outState.putBoolean(KEY_SCREEN_ROTATE, mIsRotated);
+        outState.putInt(MusicContacts.PREF_SONG_PLAY_MODE, mCurrentPlayMode);
     }
 
     /* Recreate with the existed fragment, so that it can move from a different container to another container
@@ -301,7 +329,12 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
         bundle.putString(MediaPlaybackFragment.KEY_ALBUM_NAME, albumName);
         bundle.putBoolean(KEY_IS_LAND, mIsLand);
         bundle.putBoolean(KEY_MUSIC_PLAYING, mIsPlaying);
+        bundle.putInt(MusicContacts.PREF_SONG_PLAY_MODE, mCurrentPlayMode);
         return bundle;
+    }
+
+    public void setCurrentPlayMode(int mode) {
+        mCurrentPlayMode = mode;
     }
 
     /**
@@ -438,8 +471,37 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
     }
 
     @Override
+    public void playRandom() {
+        mAllSongsFragment.randomSong();
+    }
+
+    @Override
+    public void playRepeatOneSong() {
+        if (mService != null && mMediaPlaybackFragment.getContext() != null) {
+            mMediaPlaybackFragment.setCountdownTimer(mListSong.get(mIndexCurrentSong).getDuration() - mService.getCurrentTimeSong());
+        }
+    }
+
+    @Override
     public void setStatePlaying(boolean state) {
         mIsPlaying = state;
+    }
+
+    @Override
+    public void setModePlay(int modePlay) {
+        if (mService != null) {
+            mService.setCurrentModePlay(modePlay);
+        }
+    }
+
+    @Override
+    public void setPauseButton() {
+        if (mMediaPlaybackFragment.getContext() != null) {
+            mMediaPlaybackFragment.setCheckedButton(true);
+        }
+        if (mAllSongsFragment.getContext() != null) {
+            mAllSongsFragment.setButtonState(false);
+        }
     }
 
 }
