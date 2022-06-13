@@ -60,6 +60,7 @@ public class AllSongsFragment extends Fragment implements ICallBack {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        Log.d("MinhNTn", "onCreateView: ");
         mIsLand = getArguments().getBoolean(ActivityMusic.KEY_IS_LAND, false);
         mIsPlaying = getArguments().getBoolean(ActivityMusic.KEY_MUSIC_PLAYING, false);
         mIsServiceAlive = getArguments().getBoolean(MusicContacts.PREF_SERVICE_ALIVE, false);
@@ -92,9 +93,9 @@ public class AllSongsFragment extends Fragment implements ICallBack {
 
     @Override
     public void onDestroyView() {
-        if (mRootView.getParent() != null) {
-            ((ViewGroup)mRootView.getParent()).removeView(mRootView);
-        }
+//        if (mRootView.getParent() != null) {
+//            ((ViewGroup)mRootView.getParent()).removeView(mRootView);
+//        }
         super.onDestroyView();
     }
 
@@ -116,6 +117,7 @@ public class AllSongsFragment extends Fragment implements ICallBack {
                     mTBPlaySongBottom.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                         @Override
                         public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                            Log.d("MinhNTn", "onCheckedChanged: " + mIsServiceAlive);
                             if (isChecked) {
                                 mICommunicate.pauseMusic();
                             } else {
