@@ -2,6 +2,7 @@ package com.minhntn.music.app;
 
 import android.app.Application;
 import android.content.Intent;
+import android.util.Log;
 
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleObserver;
@@ -15,6 +16,7 @@ import com.minhntn.music.interf.IDoInAsyncTask;
 
 public class MyApplication extends Application {
     private MusicDBHelper mDBHelper;
+
     private IDoInAsyncTask mIDoInAsyncTask = new IDoInAsyncTask() {
         @Override
         public void doInBackground() {

@@ -27,6 +27,7 @@ import com.minhntn.music.adapter.SongAdapter;
 import com.minhntn.music.interf.ICallBack;
 import com.minhntn.music.interf.ICommunicate;
 import com.minhntn.music.model.Song;
+import com.minhntn.music.prov.MusicContacts;
 
 import java.util.List;
 import java.util.Random;
@@ -46,6 +47,7 @@ public class AllSongsFragment extends Fragment implements ICallBack {
     private boolean mIsPlaying;
     private boolean mIsFromPause;
     private int mCurrentIndexSong = -1;
+    private boolean mIsServiceAlive;
 
     @Override
     public void onAttach(@NonNull Context context) {
@@ -60,6 +62,8 @@ public class AllSongsFragment extends Fragment implements ICallBack {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         mIsLand = getArguments().getBoolean(ActivityMusic.KEY_IS_LAND, false);
         mIsPlaying = getArguments().getBoolean(ActivityMusic.KEY_MUSIC_PLAYING, false);
+        mIsServiceAlive = getArguments().getBoolean(MusicContacts.PREF_SERVICE_ALIVE, false);
+
         if (mRootView == null) {
             mRootView = inflater.inflate(R.layout.fragment_all_songs, container, false);
             if (mListSong != null) {
@@ -116,6 +120,10 @@ public class AllSongsFragment extends Fragment implements ICallBack {
                                 mICommunicate.pauseMusic();
                             } else {
                                 mICommunicate.resumeMusic();
+                                if (!mIsServiceAlive) {
+                                    mICommunicate.startService();
+                                    mIsServiceAlive = true;
+                                }
                             }
                         }
                     });
@@ -134,6 +142,10 @@ public class AllSongsFragment extends Fragment implements ICallBack {
         // start playing music
         if (mCurrentIndexSong != -1) {
             if (!mIsFromPause) {
+                if (!mIsServiceAlive) {
+                    mICommunicate.startService();
+                    mIsServiceAlive = true;
+                }
                 mICommunicate.playMusic(mCurrentIndexSong);
             }
         }

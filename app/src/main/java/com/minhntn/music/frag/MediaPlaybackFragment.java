@@ -60,6 +60,7 @@ public class MediaPlaybackFragment extends Fragment {
     private CountDownTimer mTimer;
     private int mPlayModeLevel;
     private int mCurrentPlayMode = PLAY_MODE_DEFAULT;
+    private boolean mIsServiceAlive;
 
     public MediaPlaybackFragment() {}
 
@@ -77,6 +78,8 @@ public class MediaPlaybackFragment extends Fragment {
         mIsLand = getArguments().getBoolean(ActivityMusic.KEY_IS_LAND, false);
         mIsPlaying = getArguments().getBoolean(ActivityMusic.KEY_MUSIC_PLAYING, false);
         mCurrentPlayMode = getArguments().getInt(MusicContacts.PREF_SONG_PLAY_MODE, PLAY_MODE_DEFAULT);
+        mIsServiceAlive = getArguments().getBoolean(MusicContacts.PREF_SERVICE_ALIVE, false);
+
         switch (mCurrentPlayMode) {
             case PLAY_MODE_REPEAT_LIST: {
                 mPlayModeLevel = Math.abs(PLAY_MODE_REPEAT_LIST);

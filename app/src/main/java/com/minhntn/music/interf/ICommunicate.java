@@ -11,7 +11,6 @@ public interface ICommunicate {
     void pauseMusic();
     void resumeMusic();
     int getTimeCurrentPlay();
-    void startService();
     void seekTimeTo(int time);
     boolean isMusicPlaying();
     void playNextSong();
@@ -21,4 +20,7 @@ public interface ICommunicate {
     void setStatePlaying(boolean state);
     void setModePlay(int modePlay);
     void setPauseButton();
+
+    // Control service
+    void startService();
 }

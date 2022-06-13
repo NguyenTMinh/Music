@@ -61,6 +61,8 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
     private SharedPreferences mSharedPreferences;
     private boolean mIsRotated = false;
     private int mCurrentPlayMode;
+    private Intent intent;
+    private boolean mServiceAlive;
 
     private IDoInAsyncTask mIDoInAsyncTask = new IDoInAsyncTask() {
         @Override
@@ -75,9 +77,8 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
             mAllSongsFragment.notifyAdapter(mListSong);
 
             if (mListSong.size() > 0) {
-                Intent intent = new Intent(ActivityMusic.this, MediaPlaybackService.class);
                 intent.putParcelableArrayListExtra(KEY_LIST_SONG, (ArrayList<? extends Parcelable>) mListSong);
-                startService(intent);
+                //startService(intent);
                 bindService(intent, mServiceConnection, Service.BIND_AUTO_CREATE);
             }
 
@@ -92,6 +93,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
             mService = binder.getService();
             mService.setICommunicate(ActivityMusic.this);
             if (!mIsRotated) {
+                Log.d("MinhNTn", "onServiceConnected: reset data");
                 mService.setMediaUriSource(mIndexCurrentSong);
             }
             mService.setCurrentModePlay(mCurrentPlayMode);
@@ -118,6 +120,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        intent = new Intent(ActivityMusic.this, MediaPlaybackService.class);
 
         mSharedPreferences = getSharedPreferences(MusicContacts.SHARED_PREF_NAME, MODE_PRIVATE);
 
@@ -131,6 +134,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
             mIsRotated = savedInstanceState.getBoolean(KEY_SCREEN_ROTATE, false);
             mCurrentPlayMode = savedInstanceState.getInt(MusicContacts.PREF_SONG_PLAY_MODE,
                     MediaPlaybackFragment.PLAY_MODE_DEFAULT);
+            mServiceAlive = savedInstanceState.getBoolean(MusicContacts.PREF_SERVICE_ALIVE, false);
         } else {
             mMusicDBHelper = new MusicDBHelper(this);
             mListSong = mMusicDBHelper.getAllSongs();
@@ -138,6 +142,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
             mIndexCurrentSong = mSharedPreferences.getInt(MusicContacts.PREF_SONG_CURRENT, -1);
             mCurrentPlayMode = mSharedPreferences.getInt(MusicContacts.PREF_SONG_PLAY_MODE,
                     MediaPlaybackFragment.PLAY_MODE_DEFAULT);
+            mServiceAlive = mSharedPreferences.getBoolean(MusicContacts.PREF_SERVICE_ALIVE, false);
         }
 
         mIsLand = getResources().getBoolean(R.bool.is_land);
@@ -146,6 +151,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
         bundle.putBoolean(KEY_IS_LAND, mIsLand);
         bundle.putBoolean(KEY_MUSIC_PLAYING, mIsPlaying);
         bundle.putInt(MusicContacts.PREF_SONG_PLAY_MODE, mCurrentPlayMode);
+        bundle.putBoolean(MusicContacts.PREF_SERVICE_ALIVE, mServiceAlive);
 
         // Get the instance exists of the fragment
         mAllSongsFragment = (AllSongsFragment)
@@ -161,7 +167,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
         mAllSongsFragment.setListSong(mListSong);
         mAllSongsFragment.setAdapterIndex(mIndexCurrentSong);
         mAllSongsFragment.setArguments(bundle);
-        
+
         if (mMediaPlaybackFragment == null) {
             mMediaPlaybackFragment = new MediaPlaybackFragment();
         } else {
@@ -201,7 +207,6 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
                 .registerReceiver(mBroadcastReceiver, intentFilter);
 
         if (mListSong.size() > 0) {
-            Intent intent = new Intent(ActivityMusic.this, MediaPlaybackService.class);
             intent.putParcelableArrayListExtra(KEY_LIST_SONG, (ArrayList<? extends Parcelable>) mListSong);
             bindService(intent, mServiceConnection, Service.BIND_AUTO_CREATE);
         }
@@ -230,7 +235,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == REQUEST_CODE) {
-            if (grantResults.length >0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 new MyAsyncTask().execute(mIDoInAsyncTask);
             }
         }
@@ -254,6 +259,13 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
         LocalBroadcastManager.getInstance(this)
                 .unregisterReceiver(mBroadcastReceiver);
         unbindService(mServiceConnection);
+        if (!mService.isMediaPlaying()) {
+            stopService(intent);
+            mServiceAlive = false;
+        }
+        SharedPreferences.Editor editor = mSharedPreferences.edit();
+        editor.putBoolean(MusicContacts.PREF_SERVICE_ALIVE, mServiceAlive);
+        editor.apply();
         super.onDestroy();
     }
 
@@ -290,6 +302,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
         outState.putBoolean(KEY_MUSIC_PLAYING, mIsPlaying);
         outState.putBoolean(KEY_SCREEN_ROTATE, mIsRotated);
         outState.putInt(MusicContacts.PREF_SONG_PLAY_MODE, mCurrentPlayMode);
+        outState.putBoolean(MusicContacts.PREF_SERVICE_ALIVE, mServiceAlive);
     }
 
     /* Recreate with the existed fragment, so that it can move from a different container to another container
@@ -302,8 +315,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
             newInstance.setInitialSavedState(savedState);
 
             return newInstance;
-        }
-        catch (Exception e) // InstantiationException, IllegalAccessException
+        } catch (Exception e) // InstantiationException, IllegalAccessException
         {
             throw new RuntimeException("Cannot reinstantiate fragment " + f.getClass().getName(), e);
         }
@@ -318,7 +330,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
         Song song = mListSong.get(mIndexCurrentSong);
         byte[] cover = new byte[1];
         String albumName = "";
-        for (int i =0; i < mListAlbum.size(); i++) {
+        for (int i = 0; i < mListAlbum.size(); i++) {
             if (song.getAlbumID() == mListAlbum.get(i).getID()) {
                 cover = mListAlbum.get(i).getArt();
                 albumName = mListAlbum.get(i).getName();
@@ -330,6 +342,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
         bundle.putBoolean(KEY_IS_LAND, mIsLand);
         bundle.putBoolean(KEY_MUSIC_PLAYING, mIsPlaying);
         bundle.putInt(MusicContacts.PREF_SONG_PLAY_MODE, mCurrentPlayMode);
+        bundle.putBoolean(MusicContacts.PREF_SERVICE_ALIVE, mServiceAlive);
         return bundle;
     }
 
@@ -365,7 +378,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
         } else {
             hideActionBar();
             mMediaPlaybackFragment.setArguments(bundle);
-            FragmentTransaction transaction =  fragManager.beginTransaction();
+            FragmentTransaction transaction = fragManager.beginTransaction();
             transaction.setCustomAnimations(R.anim.enter_from_bottom, R.anim.slowly_disappear, 0, R.anim.exit_to_bottom)
                     .replace(R.id.fragment_container, mMediaPlaybackFragment, MediaPlaybackFragment.FRAGMENT_TAG)
                     .addToBackStack("").commit();
@@ -407,14 +420,14 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
 
     @Override
     public void playMusic(int position) {
-        if (mService != null){
+        if (mService != null) {
             mService.playSong(position);
         }
     }
 
     @Override
     public void pauseMusic() {
-        if (mService != null){
+        if (mService != null) {
             mService.pauseSong();
         }
     }
@@ -428,7 +441,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
 
     @Override
     public int getTimeCurrentPlay() {
-        if (mService != null){
+        if (mService != null) {
             return mService.getCurrentTimeSong();
         }
         return 0;
@@ -436,7 +449,8 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
 
     @Override
     public void startService() {
-        startService(new Intent(this, MediaPlaybackService.class));
+        startService(intent);
+        mServiceAlive = true;
     }
 
     @Override

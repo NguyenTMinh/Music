@@ -1,16 +1,26 @@
 package com.minhntn.music.serv;
 
+import android.annotation.SuppressLint;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Binder;
+import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
+import android.widget.RemoteViews;
 
 import androidx.annotation.Nullable;
+import androidx.core.app.NotificationCompat;
 
 import com.minhntn.music.ActivityMusic;
+import com.minhntn.music.R;
 import com.minhntn.music.frag.MediaPlaybackFragment;
 import com.minhntn.music.interf.ICommunicate;
 import com.minhntn.music.model.Song;
@@ -20,12 +30,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MediaPlaybackService extends Service implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompletionListener {
+    private static final String PRIMARY_CHANNEL_ID = "PRIMARY_CHANNEL_ID";
+    private static final int NOTIFICATION_ID = 1;
+
     private MediaPlayer mMediaPlayer;
     private List<Song> mSongList;
     private IBinder mBinder;
+    private ICommunicate mICommunicate;
+    private NotificationManager mNotificationManager;
+
     private int mCurrentSongIndex;
     private int mCurrentModePlay;
-    private ICommunicate mICommunicate;
+
 
     @Override
     public void onPrepared(MediaPlayer mp) {
@@ -75,7 +91,11 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        createNotificationChannel();
         mSongList = intent.getParcelableArrayListExtra(ActivityMusic.KEY_LIST_SONG);
+        Notification notification = getNotificationBuilder().build();
+
+        startForeground(NOTIFICATION_ID, notification);
         return START_NOT_STICKY;
     }
 
@@ -86,6 +106,10 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
         return mBinder;
     }
 
+    /**
+     * play a song at specified position of list
+     * @param position
+     */
     public void playSong(int position) {
         // Check the index of song should be played
         if (position >= 0) {
@@ -142,6 +166,10 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
         mICommunicate = iCommunicate;
     }
 
+    /**
+     * to prepare the data to media playing when launch app again after the previous session
+     * @param index
+     */
     public void setMediaUriSource(int index) {
         if (index != -1) {
             mCurrentSongIndex = index;
@@ -157,7 +185,44 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
         }
     }
 
+    /**
+     * set mode play song
+     * @param modePlay
+     */
     public void setCurrentModePlay(int modePlay) {
         mCurrentModePlay = modePlay;
     }
+
+    private void createNotificationChannel() {
+        mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(PRIMARY_CHANNEL_ID,
+                    "play song", NotificationManager.IMPORTANCE_DEFAULT);
+            channel.enableLights(true);
+            channel.enableVibration(true);
+            channel.setLightColor(Color.RED);
+            channel.setDescription("Notification Play Song");
+
+            mNotificationManager.createNotificationChannel(channel);
+        }
+    }
+
+    private NotificationCompat.Builder getNotificationBuilder() {
+        Intent openIntent = new Intent(this, ActivityMusic.class);
+        openIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        PendingIntent openPendingIntent = PendingIntent.getActivity(this, NOTIFICATION_ID,
+                openIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        RemoteViews remoteViewsDefault = new RemoteViews(getPackageName(), R.layout.notification_default_layout);
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, PRIMARY_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_baseline_music_note_24)
+                .setContentIntent(openPendingIntent)
+                .setCustomContentView(remoteViewsDefault)
+                .setPriority(NotificationCompat.PRIORITY_MAX);
+
+        return builder;
+    }
+
 }
