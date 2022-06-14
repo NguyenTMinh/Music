@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -60,7 +61,6 @@ public class AllSongsFragment extends Fragment implements ICallBack {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        Log.d("MinhNTn", "onCreateView: ");
         mIsLand = getArguments().getBoolean(ActivityMusic.KEY_IS_LAND, false);
         mIsPlaying = getArguments().getBoolean(ActivityMusic.KEY_MUSIC_PLAYING, false);
         mIsServiceAlive = getArguments().getBoolean(MusicContacts.PREF_SERVICE_ALIVE, false);
@@ -92,14 +92,6 @@ public class AllSongsFragment extends Fragment implements ICallBack {
     }
 
     @Override
-    public void onDestroyView() {
-//        if (mRootView.getParent() != null) {
-//            ((ViewGroup)mRootView.getParent()).removeView(mRootView);
-//        }
-        super.onDestroyView();
-    }
-
-    @Override
     public void displayNowPlayingView(int position, boolean isClicked) {
         mCurrentIndexSong = position;
         if (!mIsLand) {
@@ -112,20 +104,24 @@ public class AllSongsFragment extends Fragment implements ICallBack {
                     mTBPlaySongBottom = mNowPlayingView.findViewById(R.id.toggle_play_pause);
                 }
                 mTBPlaySongBottom.forceLayout();
+
                 mTBPlaySongBottom.setChecked(!mIsPlaying);
+
                 if (isClicked) {
                     mTBPlaySongBottom.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                         @Override
                         public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                            Log.d("MinhNTn", "onCheckedChanged: " + mIsServiceAlive);
                             if (isChecked) {
                                 mICommunicate.pauseMusic();
+//                                mIsPlaying = false;
                             } else {
                                 mICommunicate.resumeMusic();
                                 if (!mIsServiceAlive) {
                                     mICommunicate.startService();
                                     mIsServiceAlive = true;
+                                    getArguments().putBoolean(MusicContacts.PREF_SERVICE_ALIVE, true);
                                 }
+//                                mIsPlaying = true;
                             }
                         }
                     });
@@ -147,6 +143,7 @@ public class AllSongsFragment extends Fragment implements ICallBack {
                 if (!mIsServiceAlive) {
                     mICommunicate.startService();
                     mIsServiceAlive = true;
+                    getArguments().putBoolean(MusicContacts.PREF_SERVICE_ALIVE, true);
                 }
                 mICommunicate.playMusic(mCurrentIndexSong);
             }
@@ -177,6 +174,7 @@ public class AllSongsFragment extends Fragment implements ICallBack {
     public void setButtonState(boolean state) {
         if (mTBPlaySongBottom != null) {
             mTBPlaySongBottom.setChecked(!state);
+            mIsPlaying = state;
         }
     }
 

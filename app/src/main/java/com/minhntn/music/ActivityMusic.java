@@ -10,6 +10,7 @@ import androidx.fragment.app.FragmentTransaction;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import android.Manifest;
+import android.app.ActivityManager;
 import android.app.Service;
 import android.content.ComponentName;
 import android.content.Intent;
@@ -36,6 +37,7 @@ import com.minhntn.music.prov.MusicContacts;
 import com.minhntn.music.serv.MediaPlaybackService;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class ActivityMusic extends AppCompatActivity implements ICommunicate, MyBroadcastReceiver.IDoOnLoadDone {
@@ -78,7 +80,6 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
 
             if (mListSong.size() > 0) {
                 intent.putParcelableArrayListExtra(KEY_LIST_SONG, (ArrayList<? extends Parcelable>) mListSong);
-                //startService(intent);
                 bindService(intent, mServiceConnection, Service.BIND_AUTO_CREATE);
             }
 
@@ -92,20 +93,11 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
             MediaPlaybackService.MediaBinder binder = (MediaPlaybackService.MediaBinder) service;
             mService = binder.getService();
             mService.setICommunicate(ActivityMusic.this);
-            if (!mIsRotated) {
-                Log.d("MinhNTn", "onServiceConnected: reset data");
+            if (!mIsRotated && !mIsPlaying) {
                 mService.setMediaUriSource(mIndexCurrentSong);
             }
             mService.setCurrentModePlay(mCurrentPlayMode);
-
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    if (mService.isMediaPlaying()) {
-                        mAllSongsFragment.setButtonState(mService.isMediaPlaying());
-                    }
-                }
-            }, 150);
+            
             mIsRotated = true;
             mIsServiceBound = true;
         }
@@ -143,6 +135,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
             mCurrentPlayMode = mSharedPreferences.getInt(MusicContacts.PREF_SONG_PLAY_MODE,
                     MediaPlaybackFragment.PLAY_MODE_DEFAULT);
             mServiceAlive = mSharedPreferences.getBoolean(MusicContacts.PREF_SERVICE_ALIVE, false);
+            mIsPlaying = mSharedPreferences.getBoolean(MusicContacts.PREF_MUSIC_PLAYING, false);
         }
 
         mIsLand = getResources().getBoolean(R.bool.is_land);
@@ -164,9 +157,9 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
             getSupportFragmentManager().beginTransaction().remove(mAllSongsFragment).commit();
             mAllSongsFragment = (AllSongsFragment) recreateFragment(mAllSongsFragment);
         }
+        mAllSongsFragment.setArguments(bundle);
         mAllSongsFragment.setListSong(mListSong);
         mAllSongsFragment.setAdapterIndex(mIndexCurrentSong);
-        mAllSongsFragment.setArguments(bundle);
 
         if (mMediaPlaybackFragment == null) {
             mMediaPlaybackFragment = new MediaPlaybackFragment();
@@ -259,12 +252,13 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
         LocalBroadcastManager.getInstance(this)
                 .unregisterReceiver(mBroadcastReceiver);
         unbindService(mServiceConnection);
-        if (!mService.isMediaPlaying()) {
+        if (!mService.isMediaPlaying() && !isAppRunning()) {
             stopService(intent);
             mServiceAlive = false;
         }
         SharedPreferences.Editor editor = mSharedPreferences.edit();
         editor.putBoolean(MusicContacts.PREF_SERVICE_ALIVE, mServiceAlive);
+        editor.putBoolean(MusicContacts.PREF_MUSIC_PLAYING, mService.isMediaPlaying());
         editor.apply();
         super.onDestroy();
     }
@@ -319,6 +313,26 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
         {
             throw new RuntimeException("Cannot reinstantiate fragment " + f.getClass().getName(), e);
         }
+    }
+
+    /**
+     * Check if this app is killed or still runs in background (or foreground)
+     * @return
+     */
+    private boolean isAppRunning() {
+        ActivityManager m = (ActivityManager) this.getSystemService( ACTIVITY_SERVICE);
+        List<ActivityManager.RunningTaskInfo> runningTaskInfoList =  m.getRunningTasks(10);
+        Iterator<ActivityManager.RunningTaskInfo> itr = runningTaskInfoList.iterator();
+        int n=0;
+        while(itr.hasNext()){
+            n++;
+            itr.next();
+        }
+        if(n==1){ // App is killed
+            return false;
+        }
+
+        return true; // App is in background or foreground
     }
 
     public void onResumeFromBackScreen() {
@@ -429,13 +443,19 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
     public void pauseMusic() {
         if (mService != null) {
             mService.pauseSong();
+            mIsPlaying = false;
         }
     }
 
     @Override
     public void resumeMusic() {
+        if (!mServiceAlive) {
+            startService(intent);
+            mServiceAlive = true;
+        }
         if (mService != null) {
             mService.resumeSong();
+            mIsPlaying = true;
         }
     }
 

@@ -1,0 +1,10 @@
+co the them doan code duoi vao AllSongFragment de phong truong hop can xoa rootView
+    
+    @Override
+    public void onDestroyView() {
+        if (mRootView.getParent() != null) {
+            ((ViewGroup)mRootView.getParent()).removeView(mRootView);
+        }
+        super.onDestroyView();
+    }
+
