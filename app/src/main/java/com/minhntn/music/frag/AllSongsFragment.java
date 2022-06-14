@@ -65,6 +65,7 @@ public class AllSongsFragment extends Fragment implements ICallBack {
         mIsPlaying = getArguments().getBoolean(ActivityMusic.KEY_MUSIC_PLAYING, false);
         mIsServiceAlive = getArguments().getBoolean(MusicContacts.PREF_SERVICE_ALIVE, false);
 
+
         if (mRootView == null) {
             mRootView = inflater.inflate(R.layout.fragment_all_songs, container, false);
             if (mListSong != null) {
@@ -120,6 +121,7 @@ public class AllSongsFragment extends Fragment implements ICallBack {
                                     mICommunicate.startService();
                                     mIsServiceAlive = true;
                                     getArguments().putBoolean(MusicContacts.PREF_SERVICE_ALIVE, true);
+                                    mIsPlaying = true;
                                 }
 //                                mIsPlaying = true;
                             }
@@ -144,6 +146,7 @@ public class AllSongsFragment extends Fragment implements ICallBack {
                     mICommunicate.startService();
                     mIsServiceAlive = true;
                     getArguments().putBoolean(MusicContacts.PREF_SERVICE_ALIVE, true);
+                    mIsPlaying = true;
                 }
                 mICommunicate.playMusic(mCurrentIndexSong);
             }

@@ -19,12 +19,14 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Parcelable;
 import android.util.Log;
 import android.view.Menu;
+import android.widget.ImageButton;
 
 import com.minhntn.music.database.MusicDBHelper;
 import com.minhntn.music.frag.AllSongsFragment;
@@ -39,8 +41,9 @@ import com.minhntn.music.serv.MediaPlaybackService;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.Executor;
 
-public class ActivityMusic extends AppCompatActivity implements ICommunicate, MyBroadcastReceiver.IDoOnLoadDone {
+public class ActivityMusic extends AppCompatActivity implements ICommunicate {
     public static final String KEY_IS_LAND = "KEY_IS_LAND";
     public static final String KEY_INDEX_CURRENT = "KEY_INDEX_CURRENT";
     public static final String KEY_LIST_SONG = "KEY_LIST_SONG";
@@ -96,8 +99,8 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
             if (!mIsRotated && !mIsPlaying) {
                 mService.setMediaUriSource(mIndexCurrentSong);
             }
+            mService.setSongList(mListSong);
             mService.setCurrentModePlay(mCurrentPlayMode);
-            
             mIsRotated = true;
             mIsServiceBound = true;
         }
@@ -115,10 +118,11 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
         intent = new Intent(ActivityMusic.this, MediaPlaybackService.class);
 
         mSharedPreferences = getSharedPreferences(MusicContacts.SHARED_PREF_NAME, MODE_PRIVATE);
+        mMusicDBHelper = new MusicDBHelper(this);
 
         checkAppPermission();
+
         if (savedInstanceState != null) {
-            mMusicDBHelper = new MusicDBHelper(this);
             mListSong = savedInstanceState.getParcelableArrayList(KEY_LIST_SONG);
             mListAlbum = savedInstanceState.getParcelableArrayList(KEY_LIST_ALBUM);
             mIndexCurrentSong = savedInstanceState.getInt(KEY_INDEX_CURRENT);
@@ -128,7 +132,6 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
                     MediaPlaybackFragment.PLAY_MODE_DEFAULT);
             mServiceAlive = savedInstanceState.getBoolean(MusicContacts.PREF_SERVICE_ALIVE, false);
         } else {
-            mMusicDBHelper = new MusicDBHelper(this);
             mListSong = mMusicDBHelper.getAllSongs();
             mListAlbum = mMusicDBHelper.getAllAlbums();
             mIndexCurrentSong = mSharedPreferences.getInt(MusicContacts.PREF_SONG_CURRENT, -1);
@@ -157,10 +160,6 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
             getSupportFragmentManager().beginTransaction().remove(mAllSongsFragment).commit();
             mAllSongsFragment = (AllSongsFragment) recreateFragment(mAllSongsFragment);
         }
-        mAllSongsFragment.setArguments(bundle);
-        mAllSongsFragment.setListSong(mListSong);
-        mAllSongsFragment.setAdapterIndex(mIndexCurrentSong);
-
         if (mMediaPlaybackFragment == null) {
             mMediaPlaybackFragment = new MediaPlaybackFragment();
         } else {
@@ -168,6 +167,11 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
                     .commit();
             mMediaPlaybackFragment = (MediaPlaybackFragment) recreateFragment(mMediaPlaybackFragment);
         }
+
+        // Set the data needed to fragment
+        mAllSongsFragment.setArguments(bundle);
+        mAllSongsFragment.setListSong(mListSong);
+        mAllSongsFragment.setAdapterIndex(mIndexCurrentSong);
         mMediaPlaybackFragment.setArguments(bundle);
 
         // Check the orientation of device so then app can behave correctly
@@ -193,17 +197,22 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
         }
 
         // Register broadcast so when the data is finished loading to database, the app will update the current list
+        // And for notification
         mBroadcastReceiver = new MyBroadcastReceiver(this);
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(MyBroadcastReceiver.ACTION_LOAD_DONE);
         LocalBroadcastManager.getInstance(this)
                 .registerReceiver(mBroadcastReceiver, intentFilter);
 
-        if (mListSong.size() > 0) {
-            intent.putParcelableArrayListExtra(KEY_LIST_SONG, (ArrayList<? extends Parcelable>) mListSong);
-            bindService(intent, mServiceConnection, Service.BIND_AUTO_CREATE);
-        }
+        ImageButton imageButton = findViewById(R.id.ib_play_pause_notification);
+    }
 
+    private void checkUpdateDatabase() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            new MyAsyncTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mIDoInAsyncTask);
+        } else {
+            new MyAsyncTask().onPostExecute(mIDoInAsyncTask);
+        }
     }
 
     private void checkAppPermission() {
@@ -283,7 +292,20 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        // Load data again if there is a change in database
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                checkUpdateDatabase();
+            }
+        }, 100);
+    }
+
+    @Override
     public void doOnLoadDone() {
+        Log.d("MinhNTn", "doOnLoadDone: ");
         mIDoInAsyncTask.onPostExecute();
     }
 
@@ -442,8 +464,13 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
     @Override
     public void pauseMusic() {
         if (mService != null) {
-            mService.pauseSong();
+            if (mService.isMediaPlaying()) {
+                mService.pauseSong();
+            }
             mIsPlaying = false;
+        }
+        if (mAllSongsFragment != null) {
+            mAllSongsFragment.setButtonState(false);
         }
     }
 
@@ -456,6 +483,9 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
         if (mService != null) {
             mService.resumeSong();
             mIsPlaying = true;
+        }
+        if (mAllSongsFragment != null) {
+            mAllSongsFragment.setButtonState(true);
         }
     }
 

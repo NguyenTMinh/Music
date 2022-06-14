@@ -23,4 +23,7 @@ public interface ICommunicate {
 
     // Control service
     void startService();
+
+    // On load data finished
+    void doOnLoadDone();
 }

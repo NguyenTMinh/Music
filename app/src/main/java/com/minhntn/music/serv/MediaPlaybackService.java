@@ -6,21 +6,33 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
+import android.widget.ImageButton;
 import android.widget.RemoteViews;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import com.bumptech.glide.Glide;
 import com.minhntn.music.ActivityMusic;
+import com.minhntn.music.MyBroadcastReceiver;
 import com.minhntn.music.R;
+import com.minhntn.music.database.MusicDBHelper;
 import com.minhntn.music.frag.MediaPlaybackFragment;
 import com.minhntn.music.interf.ICommunicate;
 import com.minhntn.music.model.Song;
@@ -30,6 +42,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MediaPlaybackService extends Service implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompletionListener {
+    public static final String ACTION_NEXT_SONG = "ACTION_NEXT_SONG";
+    public static final String ACTION_PRE_SONG = "ACTION_PRE_SONG";
+    public static final String ACTION_PLAY_PAUSE = "ACTION_PLAY_PAUSE";
     private static final String PRIMARY_CHANNEL_ID = "PRIMARY_CHANNEL_ID";
     private static final int NOTIFICATION_ID = 1;
 
@@ -38,10 +53,13 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
     private IBinder mBinder;
     private ICommunicate mICommunicate;
     private NotificationManager mNotificationManager;
+    private MediaBroadcastReceiver mBroadcastReceiver;
+    private MusicDBHelper mMusicDBHelper;
+    private RemoteViews remoteViewsDefault;
 
     private int mCurrentSongIndex;
     private int mCurrentModePlay;
-
+    private int mButtonState;
 
     @Override
     public void onPrepared(MediaPlayer mp) {
@@ -66,6 +84,7 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
             }
             case MediaPlaybackFragment.PLAY_MODE_DEFAULT: {
                 if (mCurrentSongIndex < mSongList.size() - 1) {
+                    Log.d("MinhNTn", "onCompletion: ");
                     mICommunicate.playNextSong();
                 } else {
                     mICommunicate.setPauseButton();
@@ -87,13 +106,20 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
         mMediaPlayer = new MediaPlayer();
         mSongList = new ArrayList<>();
         mBinder = new MediaBinder();
+        mBroadcastReceiver = new MediaBroadcastReceiver();
+        mMusicDBHelper = new MusicDBHelper(this);
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(ACTION_NEXT_SONG);
+        intentFilter.addAction(ACTION_PRE_SONG);
+        intentFilter.addAction(ACTION_PLAY_PAUSE);
+        registerReceiver(mBroadcastReceiver, intentFilter);
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         createNotificationChannel();
         mSongList = intent.getParcelableArrayListExtra(ActivityMusic.KEY_LIST_SONG);
-        Notification notification = getNotificationBuilder().build();
+        Notification notification = getNotificationBuilder(null).build();
 
         startForeground(NOTIFICATION_ID, notification);
         return START_NOT_STICKY;
@@ -104,6 +130,13 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
     public IBinder onBind(Intent intent) {
         mSongList = intent.getParcelableArrayListExtra(ActivityMusic.KEY_LIST_SONG);
         return mBinder;
+    }
+
+    @Override
+    public void onDestroy() {
+        mICommunicate.pauseMusic();
+        unregisterReceiver(mBroadcastReceiver);
+        super.onDestroy();
     }
 
     /**
@@ -136,17 +169,24 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
         } catch (IndexOutOfBoundsException e) {
             e.printStackTrace();
         }
+
+        mButtonState = 0;
+        updateNotification();
     }
 
     public void pauseSong() {
         if (mMediaPlayer.isPlaying()) {
             mMediaPlayer.pause();
+            mButtonState = 1;
+            playOrPause();
         }
     }
 
     public void resumeSong() {
         if (!mMediaPlayer.isPlaying()) {
             mMediaPlayer.start();
+            mButtonState = 0;
+            playOrPause();
         }
     }
 
@@ -200,7 +240,8 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
             NotificationChannel channel = new NotificationChannel(PRIMARY_CHANNEL_ID,
                     "play song", NotificationManager.IMPORTANCE_DEFAULT);
             channel.enableLights(true);
-            channel.enableVibration(true);
+            channel.enableVibration(false);
+            channel.setSound(null, null);
             channel.setLightColor(Color.RED);
             channel.setDescription("Notification Play Song");
 
@@ -208,13 +249,33 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
         }
     }
 
-    private NotificationCompat.Builder getNotificationBuilder() {
+    private NotificationCompat.Builder getNotificationBuilder(Bitmap bitmap) {
+        // Create pendingIntent for notification
+        // pendingIntent to start Activity when click on notification
         Intent openIntent = new Intent(this, ActivityMusic.class);
         openIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
         PendingIntent openPendingIntent = PendingIntent.getActivity(this, NOTIFICATION_ID,
                 openIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        // pendingIntent to play next song
+        Intent nextSongIntent = new Intent(MyBroadcastReceiver.ACTION_NEXT_SONG);
+        PendingIntent nextSongPendingIntent = PendingIntent.getBroadcast(this, R.id.bt_fwd_notification,
+                nextSongIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        // pendingIntent to play previous song
+        Intent preSongIntent = new Intent(MyBroadcastReceiver.ACTION_PRE_SONG);
+        PendingIntent preSongPendingIntent = PendingIntent.getBroadcast(this, R.id.bt_rew_notification,
+                preSongIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        // pendingIntent to play or pause the current song
+        Intent playPauseIntent = new Intent(ACTION_PLAY_PAUSE);
+        PendingIntent playPausePendingIntent = PendingIntent.getBroadcast(this, R.id.ib_play_pause_notification,
+                playPauseIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        RemoteViews remoteViewsDefault = new RemoteViews(getPackageName(), R.layout.notification_default_layout);
+        remoteViewsDefault = new RemoteViews(getPackageName(), R.layout.notification_default_layout);
+        remoteViewsDefault.setOnClickPendingIntent(R.id.bt_fwd_notification, nextSongPendingIntent);
+        remoteViewsDefault.setOnClickPendingIntent(R.id.bt_rew_notification, preSongPendingIntent);
+        if (bitmap != null) {
+            remoteViewsDefault.setImageViewBitmap(R.id.iv_album_cover_notification, bitmap);
+        }
+        remoteViewsDefault.setOnClickPendingIntent(R.id.ib_play_pause_notification, playPausePendingIntent);
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, PRIMARY_CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_baseline_music_note_24)
@@ -225,4 +286,71 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
         return builder;
     }
 
+    public void setSongList(List<Song> list) {
+        mSongList = list;
+    }
+
+    private void updateNotification() {
+        Song song = mSongList.get(mCurrentSongIndex);
+        new UpdateNotificationAsync().execute(song.getID());
+    }
+
+    private void playOrPause() {
+        NotificationCompat.Builder builder = getNotificationBuilder(null);
+        if (mButtonState == 0) {
+            mICommunicate.pauseMusic();
+        } else {
+            mICommunicate.resumeMusic();
+        }
+
+        remoteViewsDefault.setInt(R.id.ib_play_pause_notification, "setImageLevel",
+                mButtonState);
+        mNotificationManager.notify(NOTIFICATION_ID, builder.build());
+    }
+
+    class MediaBroadcastReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            switch (action) {
+                case ACTION_NEXT_SONG: {
+                    mICommunicate.playNextSong();
+                    updateNotification();
+                    break;
+                }
+                case ACTION_PRE_SONG: {
+                    mICommunicate.playPreviousSong();
+                    updateNotification();
+                    break;
+                }
+                case ACTION_PLAY_PAUSE: {
+                    playOrPause();
+                    break;
+                }
+            }
+        }
+    }
+
+    class UpdateNotificationAsync extends AsyncTask<Integer, Void, Cursor> {
+
+        @Override
+        protected Cursor doInBackground(Integer... integers) {
+            return mMusicDBHelper.getInfoNowPlayingSong(integers[0]);
+        }
+
+        @Override
+        protected void onPostExecute(Cursor cursor) {
+            super.onPostExecute(cursor);
+
+            cursor.moveToFirst();
+            String albumName = cursor.getString(0);
+            byte[] albumCover = cursor.getBlob(1);
+
+            Bitmap bitmap = BitmapFactory.decodeByteArray(albumCover, 0, albumCover.length);
+            NotificationCompat.Builder builder = getNotificationBuilder(bitmap);
+
+            mNotificationManager.notify(NOTIFICATION_ID, builder.build());
+        }
+    }
 }
