@@ -8,13 +8,22 @@ public interface ICommunicate {
     void hideActionBar();
     void passCurrentPositionIfPortrait(int position);
     void playMusic(int position);
-    void pauseMusic();
-    void resumeMusic();
+    void pauseMusic(boolean fromService);
+    void resumeMusic(boolean fromService);
     int getTimeCurrentPlay();
-    void startService();
     void seekTimeTo(int time);
     boolean isMusicPlaying();
     void playNextSong();
     void playPreviousSong();
+    void playRandom();
+    void playRepeatOneSong();
     void setStatePlaying(boolean state);
+    void setModePlay(int modePlay);
+    void setPauseButton(boolean state);
+
+    // Control service
+    void startService();
+
+    // On load data finished
+    void doOnLoadDone();
 }

@@ -1,4 +1,4 @@
-package com.minhntn.music;
+package com.minhntn.music.adapter;
 
 import android.content.Context;
 import android.graphics.Typeface;
@@ -10,6 +10,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.minhntn.music.R;
 import com.minhntn.music.interf.ICallBack;
 import com.minhntn.music.model.Song;
 
@@ -86,7 +87,7 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
 
             Song songCurrent = mListSong.get(mIndex);
             mICallBack.setStatePlay(true);
-            mICallBack.displayNowPlayingView(mIndex);
+            mICallBack.displayNowPlayingView(mIndex, true);
             songCurrent.setPlaying(true);
 
             mTVOrderNumber.setText("");
@@ -111,7 +112,7 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
         Song songCurrent = mListSong.get(mIndex);
         songCurrent.setPlaying(true);
         mICallBack.setStatePlay(true);
-        mICallBack.displayNowPlayingView(mIndex);
+        mICallBack.displayNowPlayingView(mIndex, true);
         notifyItemChanged(mIndex);
     }
 
@@ -129,8 +130,21 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
         Song songCurrent = mListSong.get(mIndex);
         songCurrent.setPlaying(true);
         mICallBack.setStatePlay(true);
-        mICallBack.displayNowPlayingView(mIndex);
+        mICallBack.displayNowPlayingView(mIndex, true);
         notifyItemChanged(mIndex);
     }
 
+    public void playRandom(int index) {
+        if (mIndex != -1) {
+            Song song = mListSong.get(mIndex);
+            song.setPlaying(false);
+            notifyItemChanged(mIndex);
+        }
+        mIndex = index;
+        Song songCurrent = mListSong.get(mIndex);
+        songCurrent.setPlaying(true);
+        mICallBack.setStatePlay(true);
+        mICallBack.displayNowPlayingView(mIndex, true);
+        notifyItemChanged(mIndex);
+    }
 }

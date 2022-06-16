@@ -25,32 +25,39 @@ import com.minhntn.music.ActivityMusic;
 import com.minhntn.music.R;
 import com.minhntn.music.interf.ICommunicate;
 import com.minhntn.music.model.Song;
-import com.minhntn.music.serv.MediaPlaybackService;
+import com.minhntn.music.prov.MusicContacts;
 
 public class MediaPlaybackFragment extends Fragment {
     public static final String FRAGMENT_TAG = "MediaPlaybackFragment";
     public static final String KEY_COVER = "KEY_COVER";
     public static final String KEY_ALBUM_NAME = "KEY_ALBUM_NAME";
     private static final String KEY_PARCEL = "KEY_PARCEL";
+    public static final int PLAY_MODE_DEFAULT = -1;
+    public static final int PLAY_MODE_REPEAT_LIST = -2;
+    public static final int PLAY_MODE_REPEAT_SINGLE = -3;
+    public static final int PLAY_MODE_SHUFFLE_ON = -4;
 
     private View mRootView;
     private ImageView mIVBackground;
     private ImageView mIVAlbumCoverHead;
     private TextView mTVSongNameHead;
     private TextView mTVSongAlbumHead;
-    private ImageButton mBTBackToList;
     private TextView mTVSongDuration;
     private ToggleButton mTBPlaySong;
     private TextView mTVSongCurrentTime;
     private SeekBar mSBSongProgress;
-    private ImageButton mIBForward;
-    private ImageButton mIBPrevious;
+    private ImageView mBTRepeat;
+    private ToggleButton mTBShuffle;
 
     private boolean mIsLand;
     private boolean mIsPlaying;
+    private boolean mIsShuffled;
     private Song mCurrentSong;
     private ICommunicate mICommunicate;
     private CountDownTimer mTimer;
+    private int mPlayModeLevel;
+    private int mCurrentPlayMode = PLAY_MODE_DEFAULT;
+    private boolean mIsServiceAlive;
 
     public MediaPlaybackFragment() {}
 
@@ -67,17 +74,41 @@ public class MediaPlaybackFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         mIsLand = getArguments().getBoolean(ActivityMusic.KEY_IS_LAND, false);
         mIsPlaying = getArguments().getBoolean(ActivityMusic.KEY_MUSIC_PLAYING, false);
+        mCurrentPlayMode = getArguments().getInt(MusicContacts.PREF_SONG_PLAY_MODE, PLAY_MODE_DEFAULT);
+        mIsServiceAlive = getArguments().getBoolean(MusicContacts.PREF_SERVICE_ALIVE, false);
+
+        switch (mCurrentPlayMode) {
+            case PLAY_MODE_REPEAT_LIST: {
+                mPlayModeLevel = Math.abs(PLAY_MODE_REPEAT_LIST);
+                break;
+            }
+            case PLAY_MODE_REPEAT_SINGLE: {
+                mPlayModeLevel = Math.abs(PLAY_MODE_REPEAT_SINGLE);
+                break;
+            }
+            case PLAY_MODE_SHUFFLE_ON: {
+                mPlayModeLevel = Math.abs(PLAY_MODE_DEFAULT);
+                mIsShuffled = true;
+                break;
+            }
+            default: {
+                mPlayModeLevel = Math.abs(PLAY_MODE_DEFAULT);
+                mIsShuffled = false;
+            }
+        }
+
         if (savedInstanceState != null){
             mCurrentSong = savedInstanceState.getParcelable(KEY_PARCEL);
-        } 
-       if (mRootView == null) {
+        }
+        
+        if (mRootView == null) {
            mRootView = inflater.inflate(R.layout.fragment_media_playback, container, false);
            mIVBackground = mRootView.findViewById(R.id.iv_album_cover_large);
            mIVAlbumCoverHead = mRootView.findViewById(R.id.iv_album_cover_head);
            mTVSongNameHead = mRootView.findViewById(R.id.tv_song_name_now_playing_head);
            mTVSongAlbumHead = mRootView.findViewById(R.id.tv_song_album_now_playing_head);
            mTVSongDuration = mRootView.findViewById(R.id.tv_song_duration_below);
-           mBTBackToList = mRootView.findViewById(R.id.bt_back_to_list);
+           ImageButton mBTBackToList = mRootView.findViewById(R.id.bt_back_to_list);
            mBTBackToList.setOnClickListener(v -> {
                getActivity().onBackPressed();
            });
@@ -85,26 +116,71 @@ public class MediaPlaybackFragment extends Fragment {
            mTBPlaySong.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                @Override
                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                   mICommunicate.setModePlay(mCurrentPlayMode);
                    if (isChecked) {
-                       mICommunicate.pauseMusic();
+                       mICommunicate.pauseMusic(false);
                        if (mTimer != null) {
                            mTimer.cancel();
                        }
                    } else {
-                       mICommunicate.resumeMusic();
-                       setCountdownTimer(mCurrentSong.getDuration() - mICommunicate.getTimeCurrentPlay());
+                       mICommunicate.resumeMusic(false);
+                       if (mCurrentSong != null) {
+                           setCountdownTimer(mCurrentSong.getDuration() - mICommunicate.getTimeCurrentPlay());
+                       }
                    }
                }
            });
+
            mTVSongCurrentTime = mRootView.findViewById(R.id.tv_song_time_current_below);
            mSBSongProgress = mRootView.findViewById(R.id.sb_progress);
-           mIBForward = mRootView.findViewById(R.id.bt_fwd);
+           ImageButton mIBForward = mRootView.findViewById(R.id.bt_fwd);
            mIBForward.setOnClickListener(v -> {
                mICommunicate.playNextSong();
            });
-           mIBPrevious = mRootView.findViewById(R.id.bt_rew);
+           ImageButton mIBPrevious = mRootView.findViewById(R.id.bt_rew);
            mIBPrevious.setOnClickListener(v -> {
                mICommunicate.playPreviousSong();
+           });
+
+           mTBShuffle = mRootView.findViewById(R.id.bt_shuffle);
+           mTBShuffle.setChecked(mIsShuffled);
+           mTBShuffle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+               @Override
+               public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                   if (isChecked) {
+                       mCurrentPlayMode = PLAY_MODE_SHUFFLE_ON;
+                       mICommunicate.setModePlay(mCurrentPlayMode);
+                       mPlayModeLevel = Math.abs(PLAY_MODE_DEFAULT);
+                       mBTRepeat.setImageLevel(mPlayModeLevel);
+                   } else {
+                       mCurrentPlayMode = PLAY_MODE_DEFAULT;
+                       mICommunicate.setModePlay(mCurrentPlayMode);
+                   }
+               }
+           });
+
+           mBTRepeat = mRootView.findViewById(R.id.bt_repeat);
+           mBTRepeat.setImageLevel(mPlayModeLevel);
+           mBTRepeat.setOnClickListener(v -> {
+               if (mPlayModeLevel >= Math.abs(PLAY_MODE_REPEAT_SINGLE)) {
+                   mPlayModeLevel = Math.abs(PLAY_MODE_DEFAULT);
+                   mCurrentPlayMode = PLAY_MODE_DEFAULT;
+               } else {
+                   mPlayModeLevel++;
+                   switch (mPlayModeLevel) {
+                       case 2: {
+                           mCurrentPlayMode = PLAY_MODE_REPEAT_LIST;
+                           break;
+                       }
+                       case 3: {
+                           mCurrentPlayMode = PLAY_MODE_REPEAT_SINGLE;
+                           break;
+                       }
+                   }
+               }
+               mBTRepeat.setImageLevel(mPlayModeLevel);
+               mICommunicate.setModePlay(mCurrentPlayMode);
+               mTBShuffle.setChecked(false);
            });
 
            if (!mIsLand) {
@@ -133,10 +209,13 @@ public class MediaPlaybackFragment extends Fragment {
 
     @Override
     public void onPause() {
-        super.onPause();
         if (mTimer != null) {
             mTimer.cancel();
         }
+        if (getActivity() != null) {
+            ((ActivityMusic) getActivity()).setCurrentPlayMode(mCurrentPlayMode);
+        }
+        super.onPause();
     }
 
     @Override
@@ -196,23 +275,28 @@ public class MediaPlaybackFragment extends Fragment {
     }
 
     public void setCountdownTimer(long duration) {
-        mTimer = new CountDownTimer(duration, 1000) {
-            @Override
-            public void onTick(long millisUntilFinished) {
-                int timeS = (int) mICommunicate.getTimeCurrentPlay() / 1000;
-                int min = (int) (timeS / 60);
-                int sec = (int) (timeS % 60);
-                String timeFormat = String.format("%d:%d",min, sec);
-                mTVSongCurrentTime.setText(timeFormat);
-                mSBSongProgress.setProgress(mICommunicate.getTimeCurrentPlay());
-            }
+            mTimer = new CountDownTimer(duration, 1000) {
+                @Override
+                public void onTick(long millisUntilFinished) {
+                    int timeS = (int) mICommunicate.getTimeCurrentPlay() / 1000;
+                    int min = (int) (timeS / 60);
+                    int sec = (int) (timeS % 60);
+                    String timeFormat = String.format("%d:%d",min, sec);
+                    mTVSongCurrentTime.setText(timeFormat);
+                    mSBSongProgress.setProgress(mICommunicate.getTimeCurrentPlay());
+                }
 
-            @Override
-            public void onFinish() {
+                @Override
+                public void onFinish() {
 
-            }
-        };
+                }
+            };
 
-        mTimer.start();
+            mTimer.start();
+    }
+
+    public void setCheckedButton(boolean isChecked) {
+        mTBPlaySong.setChecked(isChecked);
+        mIsPlaying = !isChecked;
     }
 }
