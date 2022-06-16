@@ -187,7 +187,6 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
         if (mMediaPlayer.isPlaying()) {
             mMediaPlayer.pause();
             mButtonState = 1;
-            setButtonStateNotification();
 
             // edit SharePreference for start app later
             SharedPreferences.Editor editor = mSharedPreferences.edit();
@@ -200,7 +199,6 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
         if (!mMediaPlayer.isPlaying() && mCurrentSongIndex != -1) {
             mMediaPlayer.start();
             mButtonState = 0;
-            setButtonStateNotification();
 
             updateNotification();
 
@@ -333,11 +331,11 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
     private void playOrPause() {
         if (mButtonState == 0) {
             mICommunicate.pauseMusic(true);
+            setButtonStateNotification();
         } else {
             mICommunicate.resumeMusic(true);
         }
 
-        setButtonStateNotification();
     }
 
     private void setButtonStateNotification() {
@@ -385,6 +383,7 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
         protected void onPostExecute(Cursor cursor) {
             super.onPostExecute(cursor);
 
+            Log.d("MinhNTn", "onPostExecute: " + mButtonState);
             Song song = mSongList.get(mCurrentSongIndex);
             cursor.moveToFirst();
             String albumName = cursor.getString(0);
@@ -392,6 +391,11 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
 
             Bitmap bitmap = BitmapFactory.decodeByteArray(albumCover, 0, albumCover.length);
             NotificationCompat.Builder builder = getNotificationBuilder(bitmap, song.getmArtist(), song.getTitle());
+
+            remoteViewsDefault.setInt(R.id.ib_play_pause_notification, "setImageLevel",
+                    mButtonState);
+            remoteViewsBig.setInt(R.id.ib_play_pause_notification, "setImageLevel",
+                    mButtonState);
 
             mNotificationManager.notify(NOTIFICATION_ID, builder.build());
         }

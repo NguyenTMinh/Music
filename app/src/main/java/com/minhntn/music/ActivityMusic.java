@@ -264,7 +264,8 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
 
     @Override
     protected void onDestroy() {
-        Log.d("MinhNTn", "onDestroy: ");
+        mAllSongsFragment = null;
+        mMediaPlaybackFragment = null;
         LocalBroadcastManager.getInstance(this)
                 .unregisterReceiver(mBroadcastReceiver);
         unbindService(mServiceConnection);
