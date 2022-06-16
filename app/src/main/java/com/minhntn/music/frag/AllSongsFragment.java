@@ -100,7 +100,7 @@ public class AllSongsFragment extends Fragment implements ICallBack {
         if (mCurrentIndexSong != -1) {
             if (!mIsFromPause) {
                 mICommunicate.playMusic(mCurrentIndexSong);
-                mICommunicate.startService();
+                //mICommunicate.startService();
             }
         }
         if (!mIsLand) {

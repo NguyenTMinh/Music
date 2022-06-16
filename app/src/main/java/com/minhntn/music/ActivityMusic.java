@@ -283,7 +283,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate, My
     }
 
     public void onResumeFromBackScreen() {
-        //mAllSongsFragment.onResumeFromScreen(mIndexCurrentSong);
+        mAllSongsFragment.onResumeFromScreen(mIndexCurrentSong);
     }
 
     private Bundle getArgumentsSetToFrag() {
