@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <ImageButton
+        android:id="@+id/bt_fwd_notification"
+        android:layout_width="30dp"
+        android:layout_height="35dp"
+        android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true"
+        android:layout_marginEnd="24dp"
+        android:background="@android:color/transparent"
+        android:contentDescription="@string/next_song"
+        android:scaleType="centerCrop"
+        android:scaleX="0.8"
+        android:scaleY="0.8"
+        android:src="@drawable/button_fwd" />
+
+    <ImageButton
+        android:id="@+id/ib_play_pause_notification"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_centerVertical="true"
+        android:layout_marginEnd="16dp"
+        android:layout_toStartOf="@id/bt_fwd_notification"
+        android:background="@android:color/transparent"
+        android:contentDescription="@string/play_and_pause"
+        android:scaleType="fitCenter"
+        android:src="@drawable/fab_pause_play_notification" />
+
+    <ImageButton
+        android:clickable="true"
+        android:focusable="true"
+        android:id="@+id/bt_rew_notification"
+        android:layout_width="30dp"
+        android:layout_height="35dp"
+        android:layout_centerVertical="true"
+        android:layout_marginEnd="16dp"
+        android:layout_toStartOf="@id/ib_play_pause_notification"
+        android:background="@android:color/transparent"
+        android:contentDescription="@string/previous_song"
+        android:scaleType="centerCrop"
+        android:scaleX="0.8"
+        android:scaleY="0.8"
+        android:src="@drawable/button_rew" />
+
+    <ImageView
+        android:id="@+id/iv_album_cover_notification"
+        android:layout_width="65dp"
+        android:layout_height="65dp"
+        android:layout_alignParentStart="true"
+        android:layout_centerVertical="true"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="16dp"
+        android:src="@drawable/bg_default_album_art"
+        android:contentDescription="@string/album_image" />
+</RelativeLayout>

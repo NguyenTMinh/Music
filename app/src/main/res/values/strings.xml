@@ -3,4 +3,8 @@
     <string name="search">search</string>
     <string name="unknown"><![CDATA[<unknown>]]></string>
     <string name="_0_00">0:00</string>
+    <string name="previous_song">previous song</string>
+    <string name="album_image">album image</string>
+    <string name="play_and_pause">play and pause</string>
+    <string name="next_song">next song</string>
 </resources>

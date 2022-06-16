@@ -6,6 +6,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,8 +28,10 @@ import com.minhntn.music.adapter.SongAdapter;
 import com.minhntn.music.interf.ICallBack;
 import com.minhntn.music.interf.ICommunicate;
 import com.minhntn.music.model.Song;
+import com.minhntn.music.prov.MusicContacts;
 
 import java.util.List;
+import java.util.Random;
 
 public class AllSongsFragment extends Fragment implements ICallBack {
     public static final String FRAGMENT_TAG = "AllSongsFragment";
@@ -44,6 +48,7 @@ public class AllSongsFragment extends Fragment implements ICallBack {
     private boolean mIsPlaying;
     private boolean mIsFromPause;
     private int mCurrentIndexSong = -1;
+    private boolean mIsServiceAlive;
 
     @Override
     public void onAttach(@NonNull Context context) {
@@ -57,7 +62,9 @@ public class AllSongsFragment extends Fragment implements ICallBack {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         mIsLand = getArguments().getBoolean(ActivityMusic.KEY_IS_LAND, false);
+        mIsServiceAlive = getArguments().getBoolean(MusicContacts.PREF_SERVICE_ALIVE, false);
         mIsPlaying = getArguments().getBoolean(ActivityMusic.KEY_MUSIC_PLAYING, false);
+
         if (mRootView == null) {
             mRootView = inflater.inflate(R.layout.fragment_all_songs, container, false);
             if (mListSong != null) {
@@ -76,12 +83,20 @@ public class AllSongsFragment extends Fragment implements ICallBack {
 
             if (!mIsLand && savedInstanceState != null) {
                 if (mListSong != null) {
+                    Log.d("MinhNTn", "onCreateView: ");
                     displayNowPlayingView(mCurrentIndexSong, true);
                 }
             }
 
         }
+
         return mRootView;
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(ActivityMusic.KEY_MUSIC_PLAYING, mIsPlaying);
     }
 
     @Override
@@ -96,7 +111,7 @@ public class AllSongsFragment extends Fragment implements ICallBack {
     public void displayNowPlayingView(int position, boolean isClicked) {
         mCurrentIndexSong = position;
         if (!mIsLand) {
-            if (mCurrentIndexSong != -1) {
+            if (mCurrentIndexSong != -1 && getContext() != null) {
                 Song currentSong = mListSong.get(position);
                 int lengthAllow = getResources().getInteger(R.integer.length_in_line);
                 mNowPlayingView.setVisibility(View.VISIBLE);
@@ -105,20 +120,31 @@ public class AllSongsFragment extends Fragment implements ICallBack {
                     mTBPlaySongBottom = mNowPlayingView.findViewById(R.id.toggle_play_pause);
                 }
                 mTBPlaySongBottom.forceLayout();
+
                 mTBPlaySongBottom.setChecked(!mIsPlaying);
 
-                if (isClicked) {
-                    mTBPlaySongBottom.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                        @Override
-                        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                            if (isChecked) {
-                                mICommunicate.pauseMusic();
-                            } else {
-                                mICommunicate.resumeMusic();
-                            }
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (isClicked) {
+                            mTBPlaySongBottom.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                                @Override
+                                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                                    if (isChecked) {
+                                        mICommunicate.pauseMusic();
+                                    } else {
+                                        mICommunicate.resumeMusic();
+                                        if (!mIsServiceAlive) {
+                                            mICommunicate.startService();
+                                            mIsServiceAlive = true;
+                                            getArguments().putBoolean(MusicContacts.PREF_SERVICE_ALIVE, true);
+                                        }
+                                    }
+                                }
+                            });
                         }
-                    });
-                }
+                    }
+                }, 150);
 
                 String nameDisplay = (currentSong.getTitle().length() < lengthAllow)? currentSong.getTitle()
                         : currentSong.getTitle().substring(0, lengthAllow - 3) + "..";
@@ -133,9 +159,16 @@ public class AllSongsFragment extends Fragment implements ICallBack {
         // start playing music
         if (mCurrentIndexSong != -1) {
             if (!mIsFromPause) {
+                if (!mIsServiceAlive) {
+                    mICommunicate.startService();
+                    mIsServiceAlive = true;
+                    getArguments().putBoolean(MusicContacts.PREF_SERVICE_ALIVE, true);
+                    mIsPlaying = true;
+                }
                 mICommunicate.playMusic(mCurrentIndexSong);
             }
         }
+
     }
 
     @Override
@@ -162,6 +195,7 @@ public class AllSongsFragment extends Fragment implements ICallBack {
     public void setButtonState(boolean state) {
         if (mTBPlaySongBottom != null) {
             mTBPlaySongBottom.setChecked(!state);
+            mIsPlaying = state;
         }
     }
 
@@ -191,9 +225,23 @@ public class AllSongsFragment extends Fragment implements ICallBack {
         }
     }
 
+    public void randomSong() {
+        int rand;
+        do {
+            rand = new Random().nextInt(mListSong.size());
+        }while (rand == mCurrentIndexSong);
+        mCurrentIndexSong = rand;
+        SongAdapter.SongViewHolder viewHolder = (SongAdapter.SongViewHolder) mRVSongs.findViewHolderForAdapterPosition(mCurrentIndexSong);
+        if (viewHolder != null) {
+            viewHolder.onClick(viewHolder.itemView);
+        } else {
+            mSongAdapter.playRandom(mCurrentIndexSong);
+        }
+    }
+
     public void onResumeFromScreen(int position) {
         mIsFromPause = true;
-        displayNowPlayingView(position, false);
+        displayNowPlayingView(position, true);
         mRVSongs.smoothScrollToPosition(position);
     }
 

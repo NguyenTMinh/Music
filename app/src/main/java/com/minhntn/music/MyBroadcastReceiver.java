@@ -3,14 +3,19 @@ package com.minhntn.music;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
+
+import com.minhntn.music.interf.ICommunicate;
 
 public class MyBroadcastReceiver extends BroadcastReceiver {
     public static final String ACTION_LOAD_DONE = "ACTION_LOAD_DONE";
-    private IDoOnLoadDone mIDoOnLoadDone;
+    public static final String ACTION_NEXT_SONG = "ACTION_NEXT_SONG";
+    public static final String ACTION_PRE_SONG = "ACTION_PRE_SONG";
+    private ICommunicate mICommunicate;
 
-    public MyBroadcastReceiver(IDoOnLoadDone mIDoOnLoadDone) {
+    public MyBroadcastReceiver(ICommunicate mICommunicate) {
         super();
-        this.mIDoOnLoadDone = mIDoOnLoadDone;
+        this.mICommunicate = mICommunicate;
     }
 
     @Override
@@ -18,13 +23,11 @@ public class MyBroadcastReceiver extends BroadcastReceiver {
         String action = intent.getAction();
         switch (action) {
             case ACTION_LOAD_DONE: {
-                mIDoOnLoadDone.doOnLoadDone();
+                Log.d("MinhNTn", "onReceive: broadcast");
+                mICommunicate.doOnLoadDone();
                 break;
             }
         }
     }
 
-    public interface IDoOnLoadDone {
-        void doOnLoadDone();
-    }
 }

@@ -134,4 +134,17 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
         notifyItemChanged(mIndex);
     }
 
+    public void playRandom(int index) {
+        if (mIndex != -1) {
+            Song song = mListSong.get(mIndex);
+            song.setPlaying(false);
+            notifyItemChanged(mIndex);
+        }
+        mIndex = index;
+        Song songCurrent = mListSong.get(mIndex);
+        songCurrent.setPlaying(true);
+        mICallBack.setStatePlay(true);
+        mICallBack.displayNowPlayingView(mIndex, true);
+        notifyItemChanged(mIndex);
+    }
 }

@@ -11,10 +11,19 @@ public interface ICommunicate {
     void pauseMusic();
     void resumeMusic();
     int getTimeCurrentPlay();
-    void startService();
     void seekTimeTo(int time);
     boolean isMusicPlaying();
     void playNextSong();
     void playPreviousSong();
+    void playRandom();
+    void playRepeatOneSong();
     void setStatePlaying(boolean state);
+    void setModePlay(int modePlay);
+    void setPauseButton(boolean state);
+
+    // Control service
+    void startService();
+
+    // On load data finished
+    void doOnLoadDone();
 }
