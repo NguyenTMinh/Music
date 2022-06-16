@@ -99,9 +99,10 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
             MediaPlaybackService.MediaBinder binder = (MediaPlaybackService.MediaBinder) service;
             mService = binder.getService();
             mService.setICommunicate(ActivityMusic.this);
-            if (!mIsRotated && !mIsPlaying && !mServiceAlive && mIndexCurrentSong != -1) {
+            if (!mIsRotated && mService.getCurrentTimeSong() <= 0 && !mServiceAlive && mIndexCurrentSong != -1) {
                 mService.setMediaUriSource(mIndexCurrentSong);
             }
+
             mService.setSongList(mListSong);
             mService.setCurrentModePlay(mCurrentPlayMode);
             mIsRotated = true;
@@ -209,10 +210,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
         LocalBroadcastManager.getInstance(this)
                 .registerReceiver(mBroadcastReceiver, intentFilter);
 
-        if (mListSong.size() > 0) {
-            intent.putParcelableArrayListExtra(KEY_LIST_SONG, (ArrayList<? extends Parcelable>) mListSong);
-            bindService(intent, mServiceConnection, Service.BIND_AUTO_CREATE);
-        }
+
     }
 
     private void checkUpdateDatabase() {
@@ -266,13 +264,16 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
 
     @Override
     protected void onDestroy() {
+        Log.d("MinhNTn", "onDestroy: ");
         LocalBroadcastManager.getInstance(this)
                 .unregisterReceiver(mBroadcastReceiver);
         unbindService(mServiceConnection);
         if (!mService.isMediaPlaying() && !isAppRunning()) {
+            Log.d("MinhNTn", "onDestroy: service");
             stopService(intent);
             mServiceAlive = false;
         }
+
         SharedPreferences.Editor editor = mSharedPreferences.edit();
         editor.putBoolean(MusicContacts.PREF_SERVICE_ALIVE, mServiceAlive);
         editor.putBoolean(MusicContacts.PREF_MUSIC_PLAYING, mService.isMediaPlaying());
@@ -475,22 +476,24 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
     }
 
     @Override
-    public void pauseMusic() {
+    public void pauseMusic(boolean fromService) {
+        Log.d("MinhNTn", "pauseMusic: ");
         if (mService != null) {
             if (mService.isMediaPlaying()) {
                 mService.pauseSong();
             }
             mIsPlaying = false;
         }
-        if (mAllSongsFragment != null) {
+        if (mAllSongsFragment != null && fromService) {
             setPauseButton(true);
         }
     }
 
     @Override
-    public void resumeMusic() {
+    public void resumeMusic(boolean fromService) {
+        Log.d("MinhNTn", "resumeMusic: ");
         if (mIndexCurrentSong != -1) {
-            if (!mServiceAlive) {
+            if (!mServiceAlive && mIsPlaying) {
                 startService(intent);
                 mServiceAlive = true;
             }
@@ -498,7 +501,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
                 mService.resumeSong();
                 mIsPlaying = true;
             }
-            if (mAllSongsFragment != null) {
+            if (mAllSongsFragment != null && fromService) {
                 setPauseButton(false);
             }
         }

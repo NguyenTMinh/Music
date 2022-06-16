@@ -7,4 +7,6 @@
     <string name="album_image">album image</string>
     <string name="play_and_pause">play and pause</string>
     <string name="next_song">next song</string>
+    <string name="unknown_artist">Nghệ sĩ không xác định</string>
+    <string name="music">Music</string>
 </resources>

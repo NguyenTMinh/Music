@@ -83,7 +83,6 @@ public class AllSongsFragment extends Fragment implements ICallBack {
 
             if (!mIsLand && savedInstanceState != null) {
                 if (mListSong != null) {
-                    Log.d("MinhNTn", "onCreateView: ");
                     displayNowPlayingView(mCurrentIndexSong, true);
                 }
             }
@@ -131,10 +130,10 @@ public class AllSongsFragment extends Fragment implements ICallBack {
                                 @Override
                                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                                     if (isChecked) {
-                                        mICommunicate.pauseMusic();
+                                        mICommunicate.pauseMusic(false);
                                     } else {
-                                        mICommunicate.resumeMusic();
-                                        if (!mIsServiceAlive) {
+                                        mICommunicate.resumeMusic(false);
+                                        if (!mIsServiceAlive && mIsPlaying) {
                                             mICommunicate.startService();
                                             mIsServiceAlive = true;
                                             getArguments().putBoolean(MusicContacts.PREF_SERVICE_ALIVE, true);
@@ -159,7 +158,7 @@ public class AllSongsFragment extends Fragment implements ICallBack {
         // start playing music
         if (mCurrentIndexSong != -1) {
             if (!mIsFromPause) {
-                if (!mIsServiceAlive) {
+                if (!mIsServiceAlive && mIsPlaying) {
                     mICommunicate.startService();
                     mIsServiceAlive = true;
                     getArguments().putBoolean(MusicContacts.PREF_SERVICE_ALIVE, true);

@@ -118,12 +118,12 @@ public class MediaPlaybackFragment extends Fragment {
                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                    mICommunicate.setModePlay(mCurrentPlayMode);
                    if (isChecked) {
-                       mICommunicate.pauseMusic();
+                       mICommunicate.pauseMusic(false);
                        if (mTimer != null) {
                            mTimer.cancel();
                        }
                    } else {
-                       mICommunicate.resumeMusic();
+                       mICommunicate.resumeMusic(false);
                        if (mCurrentSong != null) {
                            setCountdownTimer(mCurrentSong.getDuration() - mICommunicate.getTimeCurrentPlay());
                        }

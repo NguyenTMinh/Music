@@ -58,6 +58,7 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
     private MediaBroadcastReceiver mBroadcastReceiver;
     private MusicDBHelper mMusicDBHelper;
     private RemoteViews remoteViewsDefault;
+    private RemoteViews remoteViewsBig;
     private SharedPreferences mSharedPreferences;
 
     private int mCurrentSongIndex = -1;
@@ -125,7 +126,7 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
     public int onStartCommand(Intent intent, int flags, int startId) {
         createNotificationChannel();
         mSongList = intent.getParcelableArrayListExtra(ActivityMusic.KEY_LIST_SONG);
-        Notification notification = getNotificationBuilder(null).build();
+        Notification notification = getNotificationBuilder(null, null, null).build();
 
         startForeground(NOTIFICATION_ID, notification);
         return START_NOT_STICKY;
@@ -140,7 +141,9 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
 
     @Override
     public void onDestroy() {
-        mICommunicate.pauseMusic();
+        if (mMediaPlayer.isPlaying()) {
+            //mICommunicate.pauseMusic(false);
+        }
         unregisterReceiver(mBroadcastReceiver);
         super.onDestroy();
     }
@@ -198,6 +201,8 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
             mMediaPlayer.start();
             mButtonState = 0;
             setButtonStateNotification();
+
+            updateNotification();
 
             // edit SharePreference for start app later
             SharedPreferences.Editor editor = mSharedPreferences.edit();
@@ -264,7 +269,7 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
         }
     }
 
-    private NotificationCompat.Builder getNotificationBuilder(Bitmap bitmap) {
+    private NotificationCompat.Builder getNotificationBuilder(Bitmap bitmap, String artist, String song) {
         // Create pendingIntent for notification
         // pendingIntent to start Activity when click on notification
         Intent openIntent = new Intent(this, ActivityMusic.class);
@@ -284,6 +289,7 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
         PendingIntent playPausePendingIntent = PendingIntent.getBroadcast(this, R.id.ib_play_pause_notification,
                 playPauseIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
+        // remoteView for default notification
         remoteViewsDefault = new RemoteViews(getPackageName(), R.layout.notification_default_layout);
         remoteViewsDefault.setOnClickPendingIntent(R.id.bt_fwd_notification, nextSongPendingIntent);
         remoteViewsDefault.setOnClickPendingIntent(R.id.bt_rew_notification, preSongPendingIntent);
@@ -292,10 +298,24 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
         }
         remoteViewsDefault.setOnClickPendingIntent(R.id.ib_play_pause_notification, playPausePendingIntent);
 
+        // remoteView for big notification
+        remoteViewsBig = new RemoteViews(getPackageName(), R.layout.notification_big_layout);
+        remoteViewsBig.setOnClickPendingIntent(R.id.bt_fwd_notification, nextSongPendingIntent);
+        remoteViewsBig.setOnClickPendingIntent(R.id.bt_rew_notification, preSongPendingIntent);
+        remoteViewsBig.setOnClickPendingIntent(R.id.ib_play_pause_notification, playPausePendingIntent);
+        if (bitmap != null) {
+            remoteViewsBig.setImageViewBitmap(R.id.iv_album_cover_notification, bitmap);
+        }
+        if (artist != null && song != null) {
+            remoteViewsBig.setTextViewText(R.id.tv_artist_notification, artist);
+            remoteViewsBig.setTextViewText(R.id.tv_song_name_notification, song);
+        }
+
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, PRIMARY_CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_baseline_music_note_24)
                 .setContentIntent(openPendingIntent)
                 .setCustomContentView(remoteViewsDefault)
+                .setCustomBigContentView(remoteViewsBig)
                 .setPriority(NotificationCompat.PRIORITY_MAX);
 
         return builder;
@@ -312,18 +332,20 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
 
     private void playOrPause() {
         if (mButtonState == 0) {
-            mICommunicate.pauseMusic();
+            mICommunicate.pauseMusic(true);
         } else {
-            mICommunicate.resumeMusic();
+            mICommunicate.resumeMusic(true);
         }
 
         setButtonStateNotification();
     }
 
     private void setButtonStateNotification() {
-        NotificationCompat.Builder builder = getNotificationBuilder(null);
+        NotificationCompat.Builder builder = getNotificationBuilder(null, null, null);
 
         remoteViewsDefault.setInt(R.id.ib_play_pause_notification, "setImageLevel",
+                mButtonState);
+        remoteViewsBig.setInt(R.id.ib_play_pause_notification, "setImageLevel",
                 mButtonState);
         mNotificationManager.notify(NOTIFICATION_ID, builder.build());
     }
@@ -363,12 +385,13 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
         protected void onPostExecute(Cursor cursor) {
             super.onPostExecute(cursor);
 
+            Song song = mSongList.get(mCurrentSongIndex);
             cursor.moveToFirst();
             String albumName = cursor.getString(0);
             byte[] albumCover = cursor.getBlob(1);
 
             Bitmap bitmap = BitmapFactory.decodeByteArray(albumCover, 0, albumCover.length);
-            NotificationCompat.Builder builder = getNotificationBuilder(bitmap);
+            NotificationCompat.Builder builder = getNotificationBuilder(bitmap, song.getmArtist(), song.getTitle());
 
             mNotificationManager.notify(NOTIFICATION_ID, builder.build());
         }

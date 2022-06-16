@@ -8,8 +8,8 @@ public interface ICommunicate {
     void hideActionBar();
     void passCurrentPositionIfPortrait(int position);
     void playMusic(int position);
-    void pauseMusic();
-    void resumeMusic();
+    void pauseMusic(boolean fromService);
+    void resumeMusic(boolean fromService);
     int getTimeCurrentPlay();
     void seekTimeTo(int time);
     boolean isMusicPlaying();
