@@ -1,5 +1,7 @@
 package com.minhntn.music.prov;
 
+import android.net.Uri;
+
 public class MusicContacts {
     public static final String SHARED_PREF_NAME = "com.minhntn.music.prov.spref";
     public static final String PREF_SONG_CURRENT = "PREF_SONG_CURRENT";
@@ -27,4 +29,21 @@ public class MusicContacts {
     public static final String ALBUM_COLUMN_NAME = "name";
     public static final String ALBUM_COLUMN_ART = "art";
 
+    // Table: Favorite
+    public static final String FAVORITE_TABLE_NAME = "favorite";
+    public static final String FAVORITE_COLUMN_ID = "ID";
+    public static final String FAVORITE_COLUMN_ID_PROVIDER = "ID_PROVIDER";
+    public static final String FAVORITE_COLUMN_IS_FAVORITE = "IS_FAVORITE";
+    public static final String FAVORITE_COLUMN_COUNT_OF_PLAY = "COUNT_OF_PLAY";
+
+    // Provider
+    public static final String SINGLE_FAV_MIME_TYPE =
+            "vnd.android.cursor.item/com.minhntn.music.databases.favorite";
+    public static final String MULTIPLE_FAV_MIME_TYPE =
+            "vnd.android.cursor.dir/com.minhntn.music.databases.favorite";
+    public static final String AUTHORITY =
+            "com.minhntn.music.FavoriteSongsProvider";
+    public static final String CONTENT_PATH = "fav";
+    public static final String URL = "content://" + ALBUM_COLUMN_ID + "/" + CONTENT_PATH;
+    public static final Uri CONTENT_URI = Uri.parse(URL);
 }

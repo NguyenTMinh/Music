@@ -46,8 +46,16 @@ public class MusicDBHelper extends SQLiteOpenHelper {
                 MusicContacts.ALBUM_COLUMN_NAME + " TEXT NOT NULL," +
                 MusicContacts.ALBUM_COLUMN_ART + " BLOB" + ")";
 
+        // Create favorite table
+        String queryCreateFavTable = "CREATE TABLE " + MusicContacts.FAVORITE_TABLE_NAME + "(" +
+                MusicContacts.FAVORITE_COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                MusicContacts.FAVORITE_COLUMN_ID_PROVIDER + " INTEGER, " +
+                MusicContacts.FAVORITE_COLUMN_IS_FAVORITE + " INTEGER DEFAULT 0, " +
+                MusicContacts.FAVORITE_COLUMN_COUNT_OF_PLAY + " INTEGER DEFAULT 0" + ")";
+
         db.execSQL(queryCreateSongTable);
         db.execSQL(queryCreateAlbumTable);
+        db.execSQL(queryCreateFavTable);
     }
 
     @Override
