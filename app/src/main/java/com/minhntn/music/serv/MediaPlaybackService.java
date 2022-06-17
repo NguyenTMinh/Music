@@ -187,6 +187,7 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
         if (mMediaPlayer.isPlaying()) {
             mMediaPlayer.pause();
             mButtonState = 1;
+            setButtonStateNotification();
 
             // edit SharePreference for start app later
             SharedPreferences.Editor editor = mSharedPreferences.edit();
@@ -331,11 +332,11 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
     private void playOrPause() {
         if (mButtonState == 0) {
             mICommunicate.pauseMusic(true);
-            setButtonStateNotification();
         } else {
             mICommunicate.resumeMusic(true);
         }
 
+        setButtonStateNotification();
     }
 
     private void setButtonStateNotification() {
@@ -383,7 +384,6 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
         protected void onPostExecute(Cursor cursor) {
             super.onPostExecute(cursor);
 
-            Log.d("MinhNTn", "onPostExecute: " + mButtonState);
             Song song = mSongList.get(mCurrentSongIndex);
             cursor.moveToFirst();
             String albumName = cursor.getString(0);

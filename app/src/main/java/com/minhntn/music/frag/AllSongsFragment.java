@@ -7,7 +7,7 @@ import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -143,7 +143,7 @@ public class AllSongsFragment extends Fragment implements ICallBack {
                             });
                         }
                     }
-                }, 150);
+                }, 100);
 
                 String nameDisplay = (currentSong.getTitle().length() < lengthAllow)? currentSong.getTitle()
                         : currentSong.getTitle().substring(0, lengthAllow - 3) + "..";
