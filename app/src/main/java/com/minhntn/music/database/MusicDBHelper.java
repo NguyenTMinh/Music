@@ -1,5 +1,6 @@
 package com.minhntn.music.database;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -38,7 +39,8 @@ public class MusicDBHelper extends SQLiteOpenHelper {
                 MusicContacts.SONG_COLUMN_DURATION + " LONG NOT NULL," +
                 MusicContacts.SONG_COLUMN_URI_SONG + " TEXT NOT NULL," +
                 MusicContacts.SONG_COLUMN_ARTIST_NAME + " TEXT NOT NULL," +
-                MusicContacts.SONG_COLUMN_ALBUM_ID + " INTEGER NOT NULL" + ")";
+                MusicContacts.SONG_COLUMN_ALBUM_ID + " INTEGER NOT NULL," +
+                MusicContacts.SONG_COLUMN_FAVORITE + " INTEGER DEFAULT -1" + ")";
 
         // Create album table
         String queryCreateAlbumTable = "CREATE TABLE " + MusicContacts.ALBUM_TABLE_NAME + "(" +
@@ -93,14 +95,29 @@ public class MusicDBHelper extends SQLiteOpenHelper {
          * */
         Song song1 = getSongWithExactDetail(song);
         if (song1 == null) {
-            String[] params = {String.valueOf(song.getID()), song.getTitle(), String.valueOf(song.getDuration()), song.getUri().toString(),
-                    song.getmArtist(), String.valueOf(tempAlbumID)};
-            database.execSQL("INSERT INTO " + MusicContacts.SONG_TABLE_NAME + " VALUES (?, ?, ?, ?, ?, ?)",
-                    params);
+            String songID = String.valueOf(song.getID());
+            String songTitle = song.getTitle();
+            String songDuration = String.valueOf(song.getDuration());
+            String songUri = song.getUri().toString();
+            String songArtist = song.getmArtist();
+            String songIDAlbum = String.valueOf(tempAlbumID);
+            // Insert new song to Song table
+            String[] paramsSong = {songID, songTitle, songDuration, songUri, songArtist, songIDAlbum};
+            database.execSQL("INSERT INTO " + MusicContacts.SONG_TABLE_NAME
+                            + "(" + MusicContacts.SONG_COLUMN_ID + "," + MusicContacts.SONG_COLUMN_NAME + ","
+                            + MusicContacts.SONG_COLUMN_DURATION + "," + MusicContacts.SONG_COLUMN_URI_SONG + ","
+                            + MusicContacts.SONG_COLUMN_ARTIST_NAME + "," + MusicContacts.SONG_COLUMN_ALBUM_ID + ")"
+                            +" VALUES (?, ?, ?, ?, ?, ?)",
+                    paramsSong);
+
+            // Insert new song to favorite table
+            String[] paramsFav = {songID};
+            database.execSQL("INSERT INTO " + MusicContacts.FAVORITE_TABLE_NAME + "(" + MusicContacts.FAVORITE_COLUMN_ID_PROVIDER
+                    +")" + " VALUES (?)", paramsFav);
         }
     }
 
-    public Album getAlbumWithExactName(String albumName) {
+    private Album getAlbumWithExactName(String albumName) {
         Album album = null;
         SQLiteDatabase database = getReadableDatabase();
         Cursor cursor = database.query(MusicContacts.ALBUM_TABLE_NAME, null,
@@ -115,17 +132,25 @@ public class MusicDBHelper extends SQLiteOpenHelper {
         return album;
     }
 
-    public Song getSongWithExactDetail(Song song) {
+    private Song getSongWithExactDetail(Song song) {
         Song temp = null;
         SQLiteDatabase database = getReadableDatabase();
         String[] selection = {String.valueOf(song.getID())};
-        Cursor cursor = database.query(MusicContacts.SONG_TABLE_NAME, null,
+
+        // Query song table for info
+        Cursor cursorSong = database.query(MusicContacts.SONG_TABLE_NAME, null,
                 MusicContacts.SONG_COLUMN_ID + " = ?", selection, null, null, null);
-        cursor.moveToFirst();
-        while (!cursor.isAfterLast()) {
-            temp = new Song(cursor.getInt(0), cursor.getString(1), cursor.getLong(2),
-                    cursor.getString(3), cursor.getString(4), cursor.getInt(5));
-            cursor.moveToNext();
+        cursorSong.moveToFirst();
+
+        // Query favorite table for info
+        Cursor cursorFav = database.query(MusicContacts.FAVORITE_TABLE_NAME, null,
+                MusicContacts.FAVORITE_COLUMN_ID_PROVIDER + "= ?", selection, null, null, null);
+        cursorFav.moveToFirst();
+
+        if (!cursorSong.isAfterLast() && !cursorFav.isAfterLast()) {
+            temp = new Song(cursorSong.getInt(0), cursorSong.getString(1), cursorSong.getLong(2),
+                    cursorSong.getString(3), cursorSong.getString(4), cursorSong.getInt(5),
+                    cursorSong.getInt(6), cursorFav.getInt(3), cursorFav.getInt(2));
         }
         return temp;
     }
@@ -133,13 +158,21 @@ public class MusicDBHelper extends SQLiteOpenHelper {
     public List<Song> getAllSongs() {
         List<Song> list = new ArrayList<>();
         SQLiteDatabase database = getReadableDatabase();
-        Cursor cursor = database.query(MusicContacts.SONG_TABLE_NAME, null, null,
+
+        Cursor cursorSong = database.query(MusicContacts.SONG_TABLE_NAME, null, null,
                 null, null, null, null);
-        cursor.moveToFirst();
-        while (!cursor.isAfterLast()) {
-            list.add(new Song(cursor.getInt(0), cursor.getString(1), cursor.getLong(2),
-                    cursor.getString(3), cursor.getString(4), cursor.getInt(5)));
-            cursor.moveToNext();
+        cursorSong.moveToFirst();
+
+        // Query favorite table for info
+        Cursor cursorFav = database.query(MusicContacts.FAVORITE_TABLE_NAME, null, null,
+                null, null, null, null);
+        cursorFav.moveToFirst();
+
+        while (!cursorSong.isAfterLast() && !cursorFav.isAfterLast()) {
+            list.add(new Song(cursorSong.getInt(0), cursorSong.getString(1), cursorSong.getLong(2),
+                    cursorSong.getString(3), cursorSong.getString(4), cursorSong.getInt(5),
+                    cursorSong.getInt(6), cursorFav.getInt(3), cursorFav.getInt(2)));
+            cursorSong.moveToNext();
         }
         return list;
     }
@@ -188,7 +221,7 @@ public class MusicDBHelper extends SQLiteOpenHelper {
                 bitmap.recycle();
             }
 
-            Song song = new Song(songID, songTitle2, songDuration2, songUri, artistName2, albumId);
+            Song song = new Song(songID, songTitle2, songDuration2, songUri, artistName2, albumId, 0, 0, 0);
             Album album = new Album(albumId, albumName2, imageCover);
             insertTB(song, album);
 
@@ -205,5 +238,18 @@ public class MusicDBHelper extends SQLiteOpenHelper {
                 MusicContacts.ALBUM_TABLE_NAME + "." + MusicContacts.ALBUM_COLUMN_ID + " AND " + MusicContacts.SONG_TABLE_NAME +
                 "." + MusicContacts.SONG_COLUMN_ID + " = " + songID;
         return database.rawQuery(queryJoin, null);
+    }
+
+    public void updateSong(Song song) {
+        SQLiteDatabase database = getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(MusicContacts.SONG_COLUMN_NAME, song.getTitle());
+        values.put(MusicContacts.SONG_COLUMN_DURATION, song.getDuration());
+        values.put(MusicContacts.SONG_COLUMN_URI_SONG, song.getUri().toString());
+        values.put(MusicContacts.SONG_COLUMN_ARTIST_NAME, song.getmArtist());
+        values.put(MusicContacts.SONG_COLUMN_ALBUM_ID, song.getAlbumID());
+        values.put(MusicContacts.SONG_COLUMN_FAVORITE, song.isFavorite()? 1:0);
+        database.update(MusicContacts.SONG_TABLE_NAME, values, MusicContacts.SONG_COLUMN_ID + " = ?",
+                new String[]{String.valueOf(song.getID())});
     }
 }

@@ -11,6 +11,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.text.TextUtils;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -105,6 +106,7 @@ public class FavoriteSongsProvider extends ContentProvider {
     @Override
     public int update(@NonNull Uri uri, @Nullable ContentValues values, @Nullable String selection, @Nullable String[] selectionArgs) {
         int count = 0;
+        Log.d("MinhNTn", "update: " + uri.getPathSegments().get(1));
 
         switch (sUriMatcher.match(uri)) {
             case NOTES: {
@@ -114,13 +116,14 @@ public class FavoriteSongsProvider extends ContentProvider {
             case NOTE_ID: {
                 String id = uri.getPathSegments().get(1);
                 count = mSqLiteDatabase.update(MusicContacts.FAVORITE_TABLE_NAME, values,
-                        MusicContacts.FAVORITE_COLUMN_ID + "=" + id +
+                        MusicContacts.FAVORITE_COLUMN_ID_PROVIDER + "=" + id +
                                 ((!TextUtils.isEmpty(selection))? " AND ( " + selection + ")" : ""),
                         selectionArgs);
                 break;
             }
             default: throw new IllegalArgumentException("Uri: " + uri);
         }
+
         return count;
     }
 }

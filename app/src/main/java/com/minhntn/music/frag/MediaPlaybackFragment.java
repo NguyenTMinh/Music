@@ -48,6 +48,7 @@ public class MediaPlaybackFragment extends Fragment {
     private SeekBar mSBSongProgress;
     private ImageView mBTRepeat;
     private ToggleButton mTBShuffle;
+    private ToggleButton mTBLike;
 
     private boolean mIsLand;
     private boolean mIsPlaying;
@@ -183,6 +184,8 @@ public class MediaPlaybackFragment extends Fragment {
                mTBShuffle.setChecked(false);
            });
 
+           mTBLike = mRootView.findViewById(R.id.toggle_like);
+
            if (!mIsLand) {
                mBTBackToList.setVisibility(View.VISIBLE);
                mICommunicate.hideActionBar();
@@ -245,6 +248,19 @@ public class MediaPlaybackFragment extends Fragment {
         Bitmap bitmap = BitmapFactory.decodeByteArray(cover, 0, cover.length);
         Glide.with(getContext()).load(bitmap).into(mIVBackground);
         Glide.with(getContext()).load(bitmap).into(mIVAlbumCoverHead);
+        if (mCurrentSong != null) {
+            mTBLike.setChecked(mCurrentSong.isFavorite());
+        }
+        mTBLike.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    mICommunicate.updateOnLikeButton(mCurrentSong.getID());
+                } else {
+
+                }
+            }
+        });
         mTVSongNameHead.setText(mCurrentSong.getTitle());
         mTVSongAlbumHead.setText(alName);
         mTVSongDuration.setText(mCurrentSong.getDurationTimeFormat());

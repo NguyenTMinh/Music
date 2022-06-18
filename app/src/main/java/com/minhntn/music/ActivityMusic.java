@@ -13,11 +13,14 @@ import android.Manifest;
 import android.app.ActivityManager;
 import android.app.Service;
 import android.content.ComponentName;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -41,6 +44,7 @@ import com.minhntn.music.serv.MediaPlaybackService;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.Executor;
 
 public class ActivityMusic extends AppCompatActivity implements ICommunicate {
@@ -58,7 +62,6 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
     private MusicDBHelper mMusicDBHelper;
     private AllSongsFragment mAllSongsFragment;
     private MediaPlaybackFragment mMediaPlaybackFragment;
-    private MyBroadcastReceiver mBroadcastReceiver;
     private boolean mIsLand;
     private int mIndexCurrentSong = -1;
     private MediaPlaybackService mService;
@@ -206,14 +209,6 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
                     AllSongsFragment.FRAGMENT_TAG).commit();
         }
 
-        // Register broadcast so when the data is finished loading to database, the app will update the current list
-        // And for notification
-        mBroadcastReceiver = new MyBroadcastReceiver(this);
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(MyBroadcastReceiver.ACTION_LOAD_DONE);
-        LocalBroadcastManager.getInstance(this)
-                .registerReceiver(mBroadcastReceiver, intentFilter);
-
         bindService(intent, mServiceConnection, Service.BIND_AUTO_CREATE);
     }
 
@@ -265,8 +260,6 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
     @Override
     protected void onDestroy() {
         Log.d("MinhNTn", "onDestroy: " + mService);
-        LocalBroadcastManager.getInstance(this)
-                .unregisterReceiver(mBroadcastReceiver);
         if (!isAppRunning()) {
             unbindService(mServiceConnection);
         }
@@ -314,13 +307,6 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
                 }
             }
         }, 100);
-    }
-
-    // delete this method later
-    @Override
-    public void doOnLoadDone() {
-        Log.d("MinhNTn", "doOnLoadDone: ");
-        mIDoInAsyncTask.onPostExecute();
     }
 
     @Override
@@ -444,7 +430,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
 
     @Override
     public void hideActionBar() {
-        if (getSupportActionBar().isShowing()) {
+        if (Objects.requireNonNull(getSupportActionBar()).isShowing()) {
             getSupportActionBar().hide();
         }
     }
@@ -515,7 +501,6 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
 
     @Override
     public void startService() {
-        Log.d("MinhNTn", "startService: ");
         startService(intent);
         mServiceAlive = true;
     }
@@ -585,4 +570,42 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
         }
     }
 
+    @Override
+    public void updateOnLikeButton(int id) {
+        ContentValues values = new ContentValues();
+        Uri newUri = Uri.parse(MusicContacts.CONTENT_URI.toString() + "/" + id);
+        values.put(MusicContacts.FAVORITE_COLUMN_IS_FAVORITE, 2);
+        int row = getContentResolver().update(newUri, values, null, null);
+        if (row > 0) {
+            updateLike(id);
+        }
+    }
+
+    @Override
+    public void updateCountPlay(int id) {
+        ContentValues values = new ContentValues();
+        Uri newUri = Uri.parse(MusicContacts.CONTENT_URI.toString() + "/" + id);
+        Song song = mListSong.get(mIndexCurrentSong);
+
+        values.put(MusicContacts.FAVORITE_COLUMN_COUNT_OF_PLAY, song.getCountOfPlay());
+        int row = getContentResolver().update(newUri, values, null, null);
+        if (row > 0) {
+            updateLike(id);
+        }
+        if (song.getCountOfPlay() >= 3) {
+            mMusicDBHelper.updateSong(song);
+        }
+    }
+
+    // update data base if song is like
+    private void updateLike(int id) {
+        for (int i = 0; i < mListSong.size(); i++) {
+            if (mListSong.get(i).getID() == id) {
+                mListSong.get(i).setFavLevel(2);
+                mListSong.get(i).setIsFavorite(true);
+                mMusicDBHelper.updateSong(mListSong.get(i));
+                break;
+            }
+        }
+    }
 }

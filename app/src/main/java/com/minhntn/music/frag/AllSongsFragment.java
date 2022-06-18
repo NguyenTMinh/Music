@@ -178,6 +178,14 @@ public class AllSongsFragment extends Fragment implements ICallBack {
         mIsPlaying = state;
     }
 
+    @Override
+    public void increaseCount() {
+        if (mCurrentIndexSong != -1) {
+            mListSong.get(mCurrentIndexSong).setCountOfPlay();
+            mICommunicate.updateCountPlay(mListSong.get(mCurrentIndexSong).getID());
+        }
+    }
+
     public void setListSong(List<Song> list) {
         mListSong = list;
     }
@@ -206,6 +214,7 @@ public class AllSongsFragment extends Fragment implements ICallBack {
         }
         SongAdapter.SongViewHolder viewHolder = (SongAdapter.SongViewHolder) mRVSongs.findViewHolderForAdapterPosition(mCurrentIndexSong);
         if (viewHolder != null) {
+            mSongAdapter.setIsClickedOnItem(true);
             viewHolder.onClick(viewHolder.itemView);
         } else {
             mSongAdapter.playNextSongIfViewHolderNull();
@@ -219,6 +228,7 @@ public class AllSongsFragment extends Fragment implements ICallBack {
         }
         SongAdapter.SongViewHolder viewHolder = (SongAdapter.SongViewHolder) mRVSongs.findViewHolderForAdapterPosition(mCurrentIndexSong);
         if (viewHolder != null) {
+            mSongAdapter.setIsClickedOnItem(true);
             viewHolder.onClick(viewHolder.itemView);
         } else {
             mSongAdapter.playPreviousSongIfViewHolderNull();
@@ -233,6 +243,7 @@ public class AllSongsFragment extends Fragment implements ICallBack {
         mCurrentIndexSong = rand;
         SongAdapter.SongViewHolder viewHolder = (SongAdapter.SongViewHolder) mRVSongs.findViewHolderForAdapterPosition(mCurrentIndexSong);
         if (viewHolder != null) {
+            mSongAdapter.setIsClickedOnItem(true);
             viewHolder.onClick(viewHolder.itemView);
         } else {
             mSongAdapter.playRandom(mCurrentIndexSong);

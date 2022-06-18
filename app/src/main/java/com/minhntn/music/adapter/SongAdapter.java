@@ -21,6 +21,7 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
     private Context mContext;
     private ICallBack mICallBack;
     private int mIndex = -1;
+    private boolean mIsClickedOnItem;
 
     public SongAdapter(List<Song> mListSong, Context mContext, ICallBack iCallBack) {
         this.mListSong = mListSong;
@@ -95,6 +96,12 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
             mTVSongName.setTypeface(null, Typeface.BOLD);
 
             notifyItemChanged(mIndex);
+
+            if (!mIsClickedOnItem) {
+                mICallBack.increaseCount();
+            } else {
+                mIsClickedOnItem = false;
+            }
         }
     }
 
@@ -146,5 +153,9 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
         mICallBack.setStatePlay(true);
         mICallBack.displayNowPlayingView(mIndex, true);
         notifyItemChanged(mIndex);
+    }
+
+    public void setIsClickedOnItem(boolean mIsClickedOnItem) {
+        this.mIsClickedOnItem = mIsClickedOnItem;
     }
 }

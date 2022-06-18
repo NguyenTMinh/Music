@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="com.minhntn.music">
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/>
 
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
@@ -16,6 +17,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Music">
+
         <activity
             android:name=".ActivityMusic"
             android:exported="true">
@@ -27,8 +29,13 @@
         </activity>
 
         <service android:name=".serv.MediaPlaybackService" />
-        <receiver android:name=".MyBroadcastReceiver" />
-    </application>
 
+        <provider
+            android:authorities="com.minhntn.music.FavoriteSongsProvider"
+            android:name=".prov.FavoriteSongsProvider"
+            android:enabled="true"
+            android:grantUriPermissions="true"/>
+
+    </application>
 
 </manifest>

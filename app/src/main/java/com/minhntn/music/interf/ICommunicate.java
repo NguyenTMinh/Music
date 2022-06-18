@@ -24,6 +24,7 @@ public interface ICommunicate {
     // Control service
     void startService();
 
-    // On load data finished
-    void doOnLoadDone();
+    // update fav table
+    void updateOnLikeButton(int id);
+    void updateCountPlay(int id);
 }

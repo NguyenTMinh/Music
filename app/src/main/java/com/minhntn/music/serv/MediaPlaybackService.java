@@ -1,6 +1,5 @@
 package com.minhntn.music.serv;
 
-import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -16,22 +15,16 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.media.MediaPlayer;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
-import android.util.Log;
-import android.widget.ImageButton;
 import android.widget.RemoteViews;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
-import com.bumptech.glide.Glide;
 import com.minhntn.music.ActivityMusic;
-import com.minhntn.music.MyBroadcastReceiver;
 import com.minhntn.music.R;
 import com.minhntn.music.database.MusicDBHelper;
 import com.minhntn.music.frag.MediaPlaybackFragment;
@@ -124,7 +117,6 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d("MinhNTn", "onStartCommand: ");
         createNotificationChannel();
         mSongList = intent.getParcelableArrayListExtra(ActivityMusic.KEY_LIST_SONG);
         Notification notification = getNotificationBuilder(null, null, null).build();
@@ -142,9 +134,8 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
 
     @Override
     public void onDestroy() {
-        Log.d("MinhNTn", "onDestroy: in service");
         if (mMediaPlayer.isPlaying()) {
-
+            // write something here
         }
         unregisterReceiver(mBroadcastReceiver);
         super.onDestroy();
@@ -283,11 +274,11 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
         PendingIntent openPendingIntent = PendingIntent.getActivity(this, NOTIFICATION_ID,
                 openIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         // pendingIntent to play next song
-        Intent nextSongIntent = new Intent(MyBroadcastReceiver.ACTION_NEXT_SONG);
+        Intent nextSongIntent = new Intent(ACTION_NEXT_SONG);
         PendingIntent nextSongPendingIntent = PendingIntent.getBroadcast(this, R.id.bt_fwd_notification,
                 nextSongIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         // pendingIntent to play previous song
-        Intent preSongIntent = new Intent(MyBroadcastReceiver.ACTION_PRE_SONG);
+        Intent preSongIntent = new Intent(ACTION_PRE_SONG);
         PendingIntent preSongPendingIntent = PendingIntent.getBroadcast(this, R.id.bt_rew_notification,
                 preSongIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         // pendingIntent to play or pause the current song

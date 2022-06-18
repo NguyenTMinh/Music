@@ -22,6 +22,7 @@ public class MusicContacts {
     public static final String SONG_COLUMN_URI_SONG = "uri";
     public static final String SONG_COLUMN_ARTIST_NAME = "artist";
     public static final String SONG_COLUMN_ALBUM_ID = "album_id";
+    public static final String SONG_COLUMN_FAVORITE = "favorite";
 
     // Table: Album
     public static final String ALBUM_TABLE_NAME = "album";
@@ -43,7 +44,7 @@ public class MusicContacts {
             "vnd.android.cursor.dir/com.minhntn.music.databases.favorite";
     public static final String AUTHORITY =
             "com.minhntn.music.FavoriteSongsProvider";
-    public static final String CONTENT_PATH = "fav";
-    public static final String URL = "content://" + ALBUM_COLUMN_ID + "/" + CONTENT_PATH;
+    public static final String CONTENT_PATH = "favorite";
+    public static final String URL = "content://" + AUTHORITY + "/" + CONTENT_PATH;
     public static final Uri CONTENT_URI = Uri.parse(URL);
 }
