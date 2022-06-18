@@ -214,6 +214,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
         LocalBroadcastManager.getInstance(this)
                 .registerReceiver(mBroadcastReceiver, intentFilter);
 
+        bindService(intent, mServiceConnection, Service.BIND_AUTO_CREATE);
     }
 
     private void checkUpdateDatabase() {
@@ -263,6 +264,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
 
     @Override
     protected void onDestroy() {
+        Log.d("MinhNTn", "onDestroy: " + mService);
         LocalBroadcastManager.getInstance(this)
                 .unregisterReceiver(mBroadcastReceiver);
         if (!isAppRunning()) {
@@ -273,7 +275,6 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
             stopService(intent);
             mServiceAlive = false;
         }
-        Log.d("MinhNTn", "onDestroy: " + mService);
         SharedPreferences.Editor editor = mSharedPreferences.edit();
         editor.putBoolean(MusicContacts.PREF_SERVICE_ALIVE, mServiceAlive);
         editor.putBoolean(MusicContacts.PREF_MUSIC_PLAYING, mService.isMediaPlaying());
@@ -514,6 +515,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
 
     @Override
     public void startService() {
+        Log.d("MinhNTn", "startService: ");
         startService(intent);
         mServiceAlive = true;
     }

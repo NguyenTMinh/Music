@@ -8,6 +8,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -133,7 +134,7 @@ public class AllSongsFragment extends Fragment implements ICallBack {
                                         mICommunicate.pauseMusic(false);
                                     } else {
                                         mICommunicate.resumeMusic(false);
-                                        if (!mIsServiceAlive && mIsPlaying) {
+                                        if (!mIsServiceAlive) {
                                             mICommunicate.startService();
                                             mIsServiceAlive = true;
                                             getArguments().putBoolean(MusicContacts.PREF_SERVICE_ALIVE, true);
@@ -158,7 +159,7 @@ public class AllSongsFragment extends Fragment implements ICallBack {
         // start playing music
         if (mCurrentIndexSong != -1) {
             if (!mIsFromPause) {
-                if (!mIsServiceAlive && mIsPlaying) {
+                if (!mIsServiceAlive) {
                     mICommunicate.startService();
                     mIsServiceAlive = true;
                     getArguments().putBoolean(MusicContacts.PREF_SERVICE_ALIVE, true);

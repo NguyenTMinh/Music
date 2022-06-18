@@ -124,6 +124,7 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.d("MinhNTn", "onStartCommand: ");
         createNotificationChannel();
         mSongList = intent.getParcelableArrayListExtra(ActivityMusic.KEY_LIST_SONG);
         Notification notification = getNotificationBuilder(null, null, null).build();
@@ -141,8 +142,9 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
 
     @Override
     public void onDestroy() {
+        Log.d("MinhNTn", "onDestroy: in service");
         if (mMediaPlayer.isPlaying()) {
-            //mICommunicate.pauseMusic(false);
+
         }
         unregisterReceiver(mBroadcastReceiver);
         super.onDestroy();
@@ -236,6 +238,11 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
         }
         Song song = mSongList.get(mCurrentSongIndex);
         try {
+            if (mMediaPlayer.isPlaying()){
+                mMediaPlayer.pause();
+                mMediaPlayer.stop();
+            }
+            
             mMediaPlayer.reset();
             mMediaPlayer.setDataSource(this, song.getUri());
             mMediaPlayer.prepareAsync();
