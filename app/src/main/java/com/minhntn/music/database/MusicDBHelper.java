@@ -40,7 +40,8 @@ public class MusicDBHelper extends SQLiteOpenHelper {
                 MusicContacts.SONG_COLUMN_URI_SONG + " TEXT NOT NULL," +
                 MusicContacts.SONG_COLUMN_ARTIST_NAME + " TEXT NOT NULL," +
                 MusicContacts.SONG_COLUMN_ALBUM_ID + " INTEGER NOT NULL," +
-                MusicContacts.SONG_COLUMN_FAVORITE + " INTEGER DEFAULT -1" + ")";
+                MusicContacts.SONG_COLUMN_FAVORITE + " INTEGER DEFAULT -1," +
+                MusicContacts.SONG_COLUMN_DISLIKE + " INTEGER DEFAULT 0" + ")";
 
         // Create album table
         String queryCreateAlbumTable = "CREATE TABLE " + MusicContacts.ALBUM_TABLE_NAME + "(" +
@@ -148,9 +149,10 @@ public class MusicDBHelper extends SQLiteOpenHelper {
         cursorFav.moveToFirst();
 
         if (!cursorSong.isAfterLast() && !cursorFav.isAfterLast()) {
+            boolean isDislike = (cursorSong.getInt(7) == 1);
             temp = new Song(cursorSong.getInt(0), cursorSong.getString(1), cursorSong.getLong(2),
                     cursorSong.getString(3), cursorSong.getString(4), cursorSong.getInt(5),
-                    cursorSong.getInt(6), cursorFav.getInt(3), cursorFav.getInt(2));
+                    cursorSong.getInt(6), cursorFav.getInt(3), cursorFav.getInt(2), isDislike);
         }
         return temp;
     }
@@ -169,9 +171,10 @@ public class MusicDBHelper extends SQLiteOpenHelper {
         cursorFav.moveToFirst();
 
         while (!cursorSong.isAfterLast() && !cursorFav.isAfterLast()) {
+            boolean isDislike = (cursorSong.getInt(7) == 1);
             list.add(new Song(cursorSong.getInt(0), cursorSong.getString(1), cursorSong.getLong(2),
                     cursorSong.getString(3), cursorSong.getString(4), cursorSong.getInt(5),
-                    cursorSong.getInt(6), cursorFav.getInt(3), cursorFav.getInt(2)));
+                    cursorSong.getInt(6), cursorFav.getInt(3), cursorFav.getInt(2), isDislike));
             cursorSong.moveToNext();
         }
         return list;
@@ -221,7 +224,7 @@ public class MusicDBHelper extends SQLiteOpenHelper {
                 bitmap.recycle();
             }
 
-            Song song = new Song(songID, songTitle2, songDuration2, songUri, artistName2, albumId, 0, 0, 0);
+            Song song = new Song(songID, songTitle2, songDuration2, songUri, artistName2, albumId, 0, 0, 0,false);
             Album album = new Album(albumId, albumName2, imageCover);
             insertTB(song, album);
 
@@ -248,7 +251,8 @@ public class MusicDBHelper extends SQLiteOpenHelper {
         values.put(MusicContacts.SONG_COLUMN_URI_SONG, song.getUri().toString());
         values.put(MusicContacts.SONG_COLUMN_ARTIST_NAME, song.getmArtist());
         values.put(MusicContacts.SONG_COLUMN_ALBUM_ID, song.getAlbumID());
-        values.put(MusicContacts.SONG_COLUMN_FAVORITE, song.isFavorite()? 1:0);
+        values.put(MusicContacts.SONG_COLUMN_FAVORITE, song.isFavorite()? 1:-1);
+        values.put(MusicContacts.SONG_COLUMN_DISLIKE, song.isDislike()? 1:0);
         database.update(MusicContacts.SONG_TABLE_NAME, values, MusicContacts.SONG_COLUMN_ID + " = ?",
                 new String[]{String.valueOf(song.getID())});
     }

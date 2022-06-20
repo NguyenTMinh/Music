@@ -23,6 +23,7 @@ public class MusicContacts {
     public static final String SONG_COLUMN_ARTIST_NAME = "artist";
     public static final String SONG_COLUMN_ALBUM_ID = "album_id";
     public static final String SONG_COLUMN_FAVORITE = "favorite";
+    public static final String SONG_COLUMN_DISLIKE = "dislike";
 
     // Table: Album
     public static final String ALBUM_TABLE_NAME = "album";

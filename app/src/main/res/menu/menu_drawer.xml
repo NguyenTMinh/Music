@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/action_all_songs"
+            android:icon="@drawable/ic_baseline_music_note_24"
+            android:title="@string/all_songs" />
+        <item
+            android:id="@+id/action_fav_songs"
+            android:icon="@drawable/ic_baseline_favorite_24"
+            android:title="@string/favorite_songs" />
+    </group>
+</menu>
