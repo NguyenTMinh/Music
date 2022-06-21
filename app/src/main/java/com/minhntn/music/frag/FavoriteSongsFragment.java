@@ -3,7 +3,8 @@ package com.minhntn.music.frag;
 import com.minhntn.music.R;
 
 public class FavoriteSongsFragment extends BaseSongListFragment{
-    public static final String TAG = "FavoriteSongsFragment";
+    public static final String FRAGMENT_TAG = "FavoriteSongsFragment";
+    public static final String ACTION_REMOVE_FAVORITE = "ACTION_REMOVE_FAVORITE";
 
     @Override
     protected int getMenuRes() {
@@ -11,8 +12,10 @@ public class FavoriteSongsFragment extends BaseSongListFragment{
     }
 
     @Override
-    public void updateSong(int index) {
+    public void updateSong(int index, String action) {
         int id = mListSong.get(index).getID();
-        mICommunicate.removeFavorite(id);
+        if (action.equals(ACTION_REMOVE_FAVORITE)) {
+            mICommunicate.removeFavorite(id);
+        }
     }
 }

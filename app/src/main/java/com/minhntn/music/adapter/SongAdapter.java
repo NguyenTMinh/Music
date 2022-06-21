@@ -15,6 +15,8 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.minhntn.music.R;
+import com.minhntn.music.frag.AllSongsFragment;
+import com.minhntn.music.frag.FavoriteSongsFragment;
 import com.minhntn.music.interf.ICallBack;
 import com.minhntn.music.model.Song;
 
@@ -94,19 +96,20 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
                     if (mResMenu == R.menu.item_menu_all_songs) {
                         switch (item.getItemId()) {
                             case R.id.remove_list: {
-
+                                mICallBack.updateSong(getAdapterPosition(), AllSongsFragment.ACTION_DELETE_SONG);
+                                SongAdapter.this.notifyItemRemoved(getAdapterPosition());
                                 break;
                             }
                             case R.id.add_fav: {
                                 mListSong.get(getAdapterPosition()).setIsFavorite(true);
-                                mICallBack.updateSong(getAdapterPosition());
+                                mICallBack.updateSong(getAdapterPosition(), AllSongsFragment.ACTION_ADD_FAVORITE);
                                 break;
                             }
                         }
                     } else {
                         if (item.getItemId() == R.id.remove_fav) {
                             mListSong.get(getAdapterPosition()).setIsFavorite(false);
-                            mICallBack.updateSong(getAdapterPosition());
+                            mICallBack.updateSong(getAdapterPosition(), FavoriteSongsFragment.ACTION_REMOVE_FAVORITE);
                             mListSong.remove(getAdapterPosition());
                             SongAdapter.this.notifyItemRemoved(getAdapterPosition());
                         }

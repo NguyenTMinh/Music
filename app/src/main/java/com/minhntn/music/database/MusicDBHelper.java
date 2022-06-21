@@ -1,5 +1,6 @@
 package com.minhntn.music.database;
 
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -9,6 +10,8 @@ import android.database.sqlite.SQLiteStatement;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.MediaMetadataRetriever;
+import android.net.Uri;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 
@@ -18,6 +21,8 @@ import com.minhntn.music.model.Song;
 import com.minhntn.music.prov.MusicContacts;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
@@ -255,5 +260,20 @@ public class MusicDBHelper extends SQLiteOpenHelper {
         values.put(MusicContacts.SONG_COLUMN_DISLIKE, song.isDislike()? 1:0);
         database.update(MusicContacts.SONG_TABLE_NAME, values, MusicContacts.SONG_COLUMN_ID + " = ?",
                 new String[]{String.valueOf(song.getID())});
+    }
+
+    public void deleteSong(String whereClause, String[] selectionArgs, Uri uri) {
+        SQLiteDatabase database = getWritableDatabase();
+        database.delete(MusicContacts.SONG_TABLE_NAME, whereClause, selectionArgs);
+
+        Uri delUri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                Long.parseLong(selectionArgs[0]));
+        int row1 = mContextWeakReference.get().getContentResolver().delete(delUri, null, null);
+
+//        int row = mContextWeakReference.get().getContentResolver().delete(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+//                MediaStore.Audio.Media._ID + " = ?", selectionArgs);
+        mContextWeakReference.get().getContentResolver().notifyChange(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,null);
+
+        Log.d("MinhNTn", "deleteSong: " + row1);
     }
 }

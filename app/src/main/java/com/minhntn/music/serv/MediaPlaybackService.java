@@ -19,6 +19,7 @@ import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
+import android.util.Log;
 import android.widget.RemoteViews;
 
 import androidx.annotation.Nullable;
@@ -83,7 +84,8 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
                 if (mCurrentSongIndex < mSongList.size() - 1) {
                     mICommunicate.playNextSong();
                 } else {
-                    mICommunicate.setPauseButton(true);
+                    Log.d("MinhNTn", "onCompletion: default done" + mMediaPlayer.isPlaying());
+                    mICommunicate.pauseMusic(true);
                 }
             }
         }

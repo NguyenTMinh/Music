@@ -29,4 +29,5 @@ public interface ICommunicate {
     void updateCountPlay(int id);
     void updateOnDislikeButton(int id, boolean isChecked);
     void removeFavorite(int id);
+    void removeFromDatabase(int id);
 }

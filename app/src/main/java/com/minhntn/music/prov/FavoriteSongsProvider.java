@@ -93,7 +93,7 @@ public class FavoriteSongsProvider extends ContentProvider {
             case NOTE_ID: {
                 String id = uri.getPathSegments().get(1);
                 count = mSqLiteDatabase.delete(MusicContacts.FAVORITE_TABLE_NAME,
-                        MusicContacts.FAVORITE_COLUMN_ID + "=" + id
+                        MusicContacts.FAVORITE_COLUMN_ID_PROVIDER + "=" + id
                                 + ((!TextUtils.isEmpty(selection))? " AND ( " + selection + ")" : ""),
                         selectionArgs);
                 break;

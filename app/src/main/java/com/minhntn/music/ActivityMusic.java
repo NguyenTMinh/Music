@@ -1,5 +1,6 @@
 package com.minhntn.music;
 
+import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
@@ -22,11 +23,15 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.provider.Settings;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -250,14 +255,15 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
 
                         if (mIsLand) {
                             getSupportFragmentManager().beginTransaction()
-                                    .replace(R.id.fragment_container_1, mFavoriteSongsFragment, FavoriteSongsFragment.TAG)
+                                    .replace(R.id.fragment_container_1, mFavoriteSongsFragment, FavoriteSongsFragment.FRAGMENT_TAG)
                                     .addToBackStack(null)
                                     .commit();
                         } else {
                             getSupportFragmentManager().beginTransaction()
-                                    .replace(R.id.fragment_container, mFavoriteSongsFragment, FavoriteSongsFragment.TAG)
+                                    .replace(R.id.fragment_container, mFavoriteSongsFragment, FavoriteSongsFragment.FRAGMENT_TAG)
                                     .addToBackStack(null)
                                     .commit();
+
                         }
                     }
                 }
@@ -278,9 +284,39 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
     private void checkAppPermission() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
                     REQUEST_CODE);
         }
+
+        boolean permission;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            permission = Environment.isExternalStorageManager();
+        } else {
+            int res_1 = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+            int res_2 = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
+            permission = res_1 == PackageManager.PERMISSION_GRANTED && res_2 == PackageManager.PERMISSION_GRANTED;
+        }
+
+        if (!permission) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                try {
+                    Intent intent = new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
+                    intent.addCategory("android.intent.category.DEFAULT");
+                    intent.setData(Uri.parse(String.format("package:%s",getApplicationContext().getPackageName())));
+                    startActivityForResult(intent, REQUEST_CODE);
+                } catch (Exception e) {
+                    Intent intent = new Intent();
+                    intent.setAction(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
+                    startActivityForResult(intent, REQUEST_CODE);
+                }
+            } else {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE,Manifest.permission.WRITE_EXTERNAL_STORAGE },
+                        REQUEST_CODE);;
+            }
+        }
+
     }
 
     public MusicDBHelper getMusicDBHelper() {
@@ -296,7 +332,6 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (mActionBarDrawerToggle.onOptionsItemSelected(item)) {
-
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -306,6 +341,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == REQUEST_CODE) {
+            Log.d("MinhNTn", "onRequestPermissionsResult: ");
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 new MyAsyncTask().execute(mIDoInAsyncTask);
             }
@@ -321,7 +357,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
             super.onBackPressed();
         } else {
             super.onBackPressed();
-            mAllSongsFragment.setButtonState(mService.isMediaPlaying());
+            mAllSongsFragment.setButtonState(mIsPlaying);
         }
     }
 
@@ -530,11 +566,11 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
 
     @Override
     public void pauseMusic(boolean fromService) {
+        mIsPlaying = false;
         if (mService != null) {
             if (mService.isMediaPlaying()) {
                 mService.pauseSong();
             }
-            mIsPlaying = false;
         }
         if (mAllSongsFragment != null && fromService) {
             setPauseButton(true);
@@ -544,13 +580,13 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
     @Override
     public void resumeMusic(boolean fromService) {
         if (mIndexCurrentSong != -1) {
+            mIsPlaying = true;
             if (!mServiceAlive && mIsPlaying) {
                 startService(intent);
                 mServiceAlive = true;
             }
             if (mService != null) {
                 mService.resumeSong();
-                mIsPlaying = true;
             }
             if (mAllSongsFragment != null && fromService) {
                 setPauseButton(false);
@@ -732,6 +768,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
                 break;
             }
         }
+
         if (song != null) {
             song.setIsFavorite(false);
             song.setFavLevel(0);
@@ -741,5 +778,30 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
                 mMusicDBHelper.updateSong(song);
             }
         }
+    }
+
+    @Override
+    public void removeFromDatabase(int id) {
+        Uri newUri = Uri.parse(MusicContacts.CONTENT_URI.toString() + "/" + id);
+        String whereClause = MusicContacts.SONG_COLUMN_ID + " = ?";
+        String[] selectionArgs = new String[] {String.valueOf(id)};
+        Song song = null;
+        
+        for (Song song1: mListSong) {
+            if (song1.getID() == id) {
+                song = song1;
+                break;
+            }
+        }
+        
+        if (song != null) {
+            int row = getContentResolver().delete(newUri, null, null);
+            if (row > 0) {
+                mMusicDBHelper.deleteSong(whereClause, selectionArgs, song.getUri());
+            }
+            mListSong.remove(song);
+            mFavListSong.remove(song);
+        }
+
     }
 }
