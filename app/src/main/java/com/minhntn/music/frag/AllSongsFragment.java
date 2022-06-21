@@ -23,6 +23,4 @@ public class AllSongsFragment extends BaseSongListFragment {
             mICommunicate.removeFromDatabase(mListSong.get(index).getID());
         }
     }
-
-
 }

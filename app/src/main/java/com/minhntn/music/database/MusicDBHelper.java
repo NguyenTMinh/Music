@@ -270,10 +270,8 @@ public class MusicDBHelper extends SQLiteOpenHelper {
                 Long.parseLong(selectionArgs[0]));
         int row1 = mContextWeakReference.get().getContentResolver().delete(delUri, null, null);
 
-//        int row = mContextWeakReference.get().getContentResolver().delete(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-//                MediaStore.Audio.Media._ID + " = ?", selectionArgs);
+        if (row1 > 0)
         mContextWeakReference.get().getContentResolver().notifyChange(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,null);
 
-        Log.d("MinhNTn", "deleteSong: " + row1);
     }
 }

@@ -101,7 +101,11 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
             mAllSongsFragment.notifyAdapter(mListSong);
 
             if (mListSong.size() > 0) {
-                intent.putParcelableArrayListExtra(KEY_LIST_SONG, (ArrayList<? extends Parcelable>) mListSong);
+                if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
+                    intent.putParcelableArrayListExtra(KEY_LIST_SONG, (ArrayList<? extends Parcelable>) mFavListSong);
+                } else {
+                    intent.putParcelableArrayListExtra(KEY_LIST_SONG, (ArrayList<? extends Parcelable>) mListSong);
+                }
                 bindService(intent, mServiceConnection, Service.BIND_AUTO_CREATE);
             }
 
@@ -119,7 +123,11 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
                 mService.setMediaUriSource(mIndexCurrentSong);
             }
 
-            mService.setSongList(mListSong);
+            if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
+                mService.setSongList(mFavListSong);
+            } else {
+                mService.setSongList(mListSong);
+            }
             mService.setCurrentModePlay(mCurrentPlayMode);
             mIsRotated = true;
             mIsServiceBound = true;
@@ -161,10 +169,6 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
         }
         mListAlbum = mMusicDBHelper.getAllAlbums();
         mFavListSong = new ArrayList<>();
-
-        // Bind service
-        intent.putParcelableArrayListExtra(KEY_LIST_SONG, (ArrayList<? extends Parcelable>) mListSong);
-        bindService(intent, mServiceConnection, Service.BIND_AUTO_CREATE);
 
         mIsLand = getResources().getBoolean(R.bool.is_land);
         
@@ -223,6 +227,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
         }
 
         // bind service to this activity
+        intent.putParcelableArrayListExtra(KEY_LIST_SONG, (ArrayList<? extends Parcelable>) mListSong);
         bindService(intent, mServiceConnection, Service.BIND_AUTO_CREATE);
 
         // Setup navigation drawer
@@ -239,6 +244,9 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
                     case R.id.action_all_songs: {
                         if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
                             getSupportFragmentManager().popBackStack();
+                            if (mService != null) {
+                                mService.setSongList(mListSong);
+                            }
                         }
                         break;
                     }
@@ -252,6 +260,9 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
                         mFavoriteSongsFragment = new FavoriteSongsFragment();
                         mFavoriteSongsFragment.setListSong(mFavListSong);
                         mFavoriteSongsFragment.setArguments(bundle);
+                        if (mService != null) {
+                            mService.setSongList(mFavListSong);
+                        }
 
                         if (mIsLand) {
                             getSupportFragmentManager().beginTransaction()
@@ -341,7 +352,6 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == REQUEST_CODE) {
-            Log.d("MinhNTn", "onRequestPermissionsResult: ");
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 new MyAsyncTask().execute(mIDoInAsyncTask);
             }
@@ -582,6 +592,11 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
         if (mIndexCurrentSong != -1) {
             mIsPlaying = true;
             if (!mServiceAlive && mIsPlaying) {
+                if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
+                    intent.putParcelableArrayListExtra(KEY_LIST_SONG, (ArrayList<? extends Parcelable>) mFavListSong);
+                } else {
+                    intent.putParcelableArrayListExtra(KEY_LIST_SONG, (ArrayList<? extends Parcelable>) mListSong);
+                }
                 startService(intent);
                 mServiceAlive = true;
             }
@@ -604,6 +619,11 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
 
     @Override
     public void startService() {
+        if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
+            intent.putParcelableArrayListExtra(KEY_LIST_SONG, (ArrayList<? extends Parcelable>) mFavListSong);
+        } else {
+            intent.putParcelableArrayListExtra(KEY_LIST_SONG, (ArrayList<? extends Parcelable>) mListSong);
+        }
         startService(intent);
         mServiceAlive = true;
     }

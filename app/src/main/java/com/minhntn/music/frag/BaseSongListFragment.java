@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.Random;
 
 public abstract class BaseSongListFragment extends Fragment implements ICallBack {
-
+    protected static int mIDSongCurrent;
     protected View mRootView;
     protected RecyclerView mRVSongs;
     protected List<Song> mListSong;

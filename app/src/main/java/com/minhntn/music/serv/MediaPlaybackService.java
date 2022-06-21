@@ -155,6 +155,7 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
 
         try {
             Song song = mSongList.get(mCurrentSongIndex);
+            Log.d("MinhNTn", "playSong: " + song.getTitle());
             try {
                 if (mMediaPlayer.isPlaying()){
                     mMediaPlayer.pause();
