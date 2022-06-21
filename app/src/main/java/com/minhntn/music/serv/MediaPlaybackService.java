@@ -84,7 +84,6 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
                 if (mCurrentSongIndex < mSongList.size() - 1) {
                     mICommunicate.playNextSong();
                 } else {
-                    Log.d("MinhNTn", "onCompletion: default done" + mMediaPlayer.isPlaying());
                     mICommunicate.pauseMusic(true);
                 }
             }
@@ -155,7 +154,6 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
 
         try {
             Song song = mSongList.get(mCurrentSongIndex);
-            Log.d("MinhNTn", "playSong: " + song.getTitle());
             try {
                 if (mMediaPlayer.isPlaying()){
                     mMediaPlayer.pause();

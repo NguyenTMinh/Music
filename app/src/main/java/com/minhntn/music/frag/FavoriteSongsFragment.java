@@ -12,10 +12,16 @@ public class FavoriteSongsFragment extends BaseSongListFragment{
     }
 
     @Override
+    protected String getFragTag() {
+        return FRAGMENT_TAG;
+    }
+
+    @Override
     public void updateSong(int index, String action) {
         int id = mListSong.get(index).getID();
         if (action.equals(ACTION_REMOVE_FAVORITE)) {
             mICommunicate.removeFavorite(id);
         }
     }
+
 }

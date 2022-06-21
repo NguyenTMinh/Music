@@ -20,6 +20,8 @@ public interface ICommunicate {
     void setStatePlaying(boolean state);
     void setModePlay(int modePlay);
     void setPauseButton(boolean state);
+    void displayControlMedia(int position, boolean isClicked, String fromFrag);
+    void setIsFromPause(boolean fromPause);
 
     // Control service
     void startService();

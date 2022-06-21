@@ -1,21 +1,12 @@
 package com.minhntn.music.frag;
 
 import android.content.Context;
-import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
+
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CompoundButton;
-import android.widget.ImageButton;
-import android.widget.ImageView;
-import android.widget.TextView;
-import android.widget.ToggleButton;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -35,19 +26,15 @@ import java.util.List;
 import java.util.Random;
 
 public abstract class BaseSongListFragment extends Fragment implements ICallBack {
-    protected static int mIDSongCurrent;
+
     protected View mRootView;
     protected RecyclerView mRVSongs;
     protected List<Song> mListSong;
     protected ICommunicate mICommunicate;
     protected SongAdapter mSongAdapter;
 
-    protected View mNowPlayingView;
-    protected ToggleButton mTBPlaySongBottom;
-
     protected boolean mIsLand;
     protected boolean mIsPlaying;
-    protected boolean mIsFromPause;
     protected int mCurrentIndexSong = -1;
     protected boolean mIsServiceAlive;
 
@@ -77,11 +64,6 @@ public abstract class BaseSongListFragment extends Fragment implements ICallBack
             mRVSongs.setAdapter(mSongAdapter);
             mRVSongs.setLayoutManager(new LinearLayoutManager(getContext()));
 
-            mNowPlayingView = mRootView.findViewById(R.id.v_now_playing);
-            mNowPlayingView.setOnClickListener(v -> {
-                mICommunicate.transition(mCurrentIndexSong);
-            });
-
             if (!mIsLand && savedInstanceState != null) {
                 if (mListSong != null) {
                     displayNowPlayingView(mCurrentIndexSong, true);
@@ -110,70 +92,12 @@ public abstract class BaseSongListFragment extends Fragment implements ICallBack
     @Override
     public void displayNowPlayingView(int position, boolean isClicked) {
         mCurrentIndexSong = position;
-        if (!mIsLand) {
-            if (mCurrentIndexSong != -1 && getContext() != null) {
-                Song currentSong = mListSong.get(position);
-                int lengthAllow = getResources().getInteger(R.integer.length_in_line);
-                mNowPlayingView.setVisibility(View.VISIBLE);
-                TextView name = mNowPlayingView.findViewById(R.id.tv_song_name_now_playing);
-                if (mTBPlaySongBottom == null) {
-                    mTBPlaySongBottom = mNowPlayingView.findViewById(R.id.toggle_play_pause);
-                }
-                mTBPlaySongBottom.forceLayout();
-
-                mTBPlaySongBottom.setChecked(!mIsPlaying);
-
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (isClicked) {
-                            mTBPlaySongBottom.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                                @Override
-                                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                                    if (isChecked) {
-                                        mICommunicate.pauseMusic(false);
-                                    } else {
-                                        mICommunicate.resumeMusic(false);
-                                        if (!mIsServiceAlive) {
-                                            mICommunicate.startService();
-                                            mIsServiceAlive = true;
-                                            getArguments().putBoolean(MusicContacts.PREF_SERVICE_ALIVE, true);
-                                        }
-                                    }
-                                }
-                            });
-                        }
-                    }
-                }, 100);
-
-                String nameDisplay = (currentSong.getTitle().length() < lengthAllow)? currentSong.getTitle()
-                        : currentSong.getTitle().substring(0, lengthAllow - 3) + "..";
-                name.setText(nameDisplay);
-                new DBAsyncTask().execute(currentSong.getID());
-            }
-            mICommunicate.passCurrentPositionIfPortrait(position);
-        } else {
-            mICommunicate.transition(mCurrentIndexSong);
-        }
-
-        // start playing music
-        if (mCurrentIndexSong != -1) {
-            if (!mIsFromPause) {
-                if (!mIsServiceAlive) {
-                    mICommunicate.startService();
-                    mIsServiceAlive = true;
-                    getArguments().putBoolean(MusicContacts.PREF_SERVICE_ALIVE, true);
-                    mIsPlaying = true;
-                }
-                mICommunicate.playMusic(mCurrentIndexSong);
-            }
-        }
-
+        mICommunicate.displayControlMedia(position, isClicked, getFragTag());
     }
 
     @Override
     public void setStatePlay(boolean state) {
-        mIsFromPause = false;
+        mICommunicate.setIsFromPause(false);
         mICommunicate.setStatePlaying(state);
         mIsPlaying = state;
     }
@@ -196,15 +120,22 @@ public abstract class BaseSongListFragment extends Fragment implements ICallBack
         mSongAdapter.notifyDataSetChanged();
     }
 
-    public void setAdapterIndex(int index) {
-        mCurrentIndexSong = index;
+    public int setAdapterIndex(int index) {
+        if (index != -1) {
+            if (mCurrentIndexSong != -1) {
+                mSongAdapter.notifyItemChanged(mCurrentIndexSong);
+            }
+            if (mSongAdapter != null) {
+                mSongAdapter.notifyItemChanged(index);
+                mSongAdapter.setIndex(index);
+            }
+            mCurrentIndexSong = index;
+        }
+        return mCurrentIndexSong;
     }
 
     public void setButtonState(boolean state) {
-        if (mTBPlaySongBottom != null) {
-            mTBPlaySongBottom.setChecked(!state);
-            mIsPlaying = state;
-        }
+        mIsPlaying = state;
     }
 
     public void nextSong() {
@@ -251,36 +182,17 @@ public abstract class BaseSongListFragment extends Fragment implements ICallBack
     }
 
     public void onResumeFromScreen(int position) {
-        mIsFromPause = true;
-        displayNowPlayingView(position, true);
         mRVSongs.smoothScrollToPosition(position);
+    }
+
+    public int getIDFromSongOnList() {
+        if (mCurrentIndexSong != -1) {
+            return mListSong.get(mCurrentIndexSong).getID();
+        }
+        return -1;
     }
 
     protected abstract int getMenuRes();
 
-    class DBAsyncTask extends AsyncTask<Integer, Void, Cursor> {
-
-        @Override
-        protected Cursor doInBackground(Integer... integers) {
-            return ((ActivityMusic) getContext()).getMusicDBHelper().getInfoNowPlayingSong(integers[0]);
-        }
-
-        @Override
-        protected void onPostExecute(Cursor cursor) {
-            TextView album = mNowPlayingView.findViewById(R.id.tv_song_album_now_playing);
-            ImageView cover = mNowPlayingView.findViewById(R.id.iv_album_cover);
-
-            cursor.moveToFirst();
-            String albumName = cursor.getString(0);
-            byte[] albumCover = cursor.getBlob(1);
-
-            int lengthAllow = getResources().getInteger(R.integer.length_in_line);
-            Bitmap bitmap = BitmapFactory.decodeByteArray(albumCover, 0, albumCover.length);
-            String albumDisplay = (albumName.length() <= lengthAllow)? albumName : albumName.substring(0, lengthAllow - 3) + "..";
-
-            cover.setImageBitmap(bitmap);
-            album.setText(albumDisplay);
-            mTBPlaySongBottom.setChecked(!mIsPlaying);
-        }
-    }
+    protected abstract String getFragTag();
 }

@@ -8,10 +8,9 @@
     tools:openDrawer="start"
     tools:context=".ActivityMusic">
 
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/fragment_container"/>
+    <include
+        android:id="@+id/layout_main_portrait"
+        layout="@layout/layout_activity_portrait"/>
 
     <com.google.android.material.navigation.NavigationView
         android:id="@+id/nav_drawer"
