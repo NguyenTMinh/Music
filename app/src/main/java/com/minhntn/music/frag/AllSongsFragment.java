@@ -26,6 +26,9 @@ public class AllSongsFragment extends BaseSongListFragment {
         if (action.equals(ACTION_ADD_FAVORITE)) {
             mICommunicate.updateOnLikeButton(mListSong.get(index).getID(), true, index);
         } else {
+            if (index < mCurrentIndexSong) {
+                mCurrentIndexSong--;
+            }
             mICommunicate.removeFromDatabase(mListSong.get(index).getID());
         }
     }

@@ -1024,6 +1024,10 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
                 mMusicDBHelper.updateSong(song);
             }
         }
+
+        if (mMediaPlaybackFragment != null) {
+            mMediaPlaybackFragment.setCheckedLikeButton(false);
+        }
     }
 
     @Override
@@ -1046,6 +1050,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
             }
             mListSong.remove(song);
             mFavListSong.remove(song);
+            mAllSongsFragment.notifyAdapter(mListSong);
         }
     }
 

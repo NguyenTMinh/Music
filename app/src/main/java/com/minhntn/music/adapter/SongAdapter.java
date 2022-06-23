@@ -2,6 +2,7 @@ package com.minhntn.music.adapter;
 
 import android.content.Context;
 import android.graphics.Typeface;
+import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -98,7 +99,9 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
                         switch (item.getItemId()) {
                             case R.id.remove_list: {
                                 mICallBack.updateSong(getAdapterPosition(), AllSongsFragment.ACTION_DELETE_SONG);
-                                SongAdapter.this.notifyItemRemoved(getAdapterPosition());
+                                if (getAdapterPosition() < mIndex) {
+                                    mIndex--;
+                                }
                                 break;
                             }
                             case R.id.add_fav: {
