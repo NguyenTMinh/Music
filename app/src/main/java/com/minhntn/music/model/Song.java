@@ -13,15 +13,29 @@ public class Song implements Parcelable {
     private String mUri;
     private int mAlbumID;
     private String mArtist;
-    private boolean mIsPlaying;
+    private boolean mIsPlaying; // for displaying in adapter
+    private boolean mIsFavorite;
+    private int mCountOfPlay;
+    private int mFavLevel;
+    private boolean mIsDislike;
 
-    public Song(int mID, String mTitle, long mDuration, String mUri, String mArtist, int mAlbumID) {
+    public Song() {}
+
+    public Song(int mID, String mTitle, long mDuration, String mUri, String mArtist, int mAlbumID, int favorite, int mCountOfPlay, int mFavLevel, boolean mIsDislike) {
         this.mID = mID;
         this.mTitle = mTitle;
         this.mDuration = mDuration;
         this.mUri = mUri;
         this.mArtist = mArtist;
         this.mAlbumID = mAlbumID;
+        if (favorite == 1) {
+            this.mIsFavorite = true;
+        } else {
+            this.mIsFavorite = false;
+        }
+        this.mCountOfPlay = mCountOfPlay;
+        this.mFavLevel = mFavLevel;
+        this.mIsDislike = mIsDislike;
     }
 
     protected Song(Parcel in) {
@@ -95,6 +109,46 @@ public class Song implements Parcelable {
 
     public void setPlaying(boolean playing) {
         mIsPlaying = playing;
+    }
+
+    public void setIsFavorite(boolean mIsFavorite) {
+        this.mIsFavorite = mIsFavorite;
+    }
+
+    public boolean isFavorite() {
+        return mIsFavorite;
+    }
+
+    public int getCountOfPlay() {
+        return mCountOfPlay;
+    }
+
+    public void setCountOfPlay() {
+        if (mCountOfPlay < 3) {
+            this.mCountOfPlay++;
+        }
+    }
+
+    public void resetCountOfPlay() {
+        if (mCountOfPlay >= 3) {
+            this.mCountOfPlay = 0;
+        }
+    }
+
+    public int getFavLevel() {
+        return mFavLevel;
+    }
+
+    public void setFavLevel(int mFavLevel) {
+        this.mFavLevel = mFavLevel;
+    }
+
+    public boolean isDislike() {
+        return mIsDislike;
+    }
+
+    public void setDislike(boolean mIsDislike) {
+        this.mIsDislike = mIsDislike;
     }
 
     @Override

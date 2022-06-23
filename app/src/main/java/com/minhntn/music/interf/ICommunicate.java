@@ -20,10 +20,19 @@ public interface ICommunicate {
     void setStatePlaying(boolean state);
     void setModePlay(int modePlay);
     void setPauseButton(boolean state);
+    void displayControlMedia(int position, boolean isClicked, String fromFrag);
+    void setIsFromPause(boolean fromPause);
+    boolean isSongOnList();
+    void setSongOnList(boolean onList);
 
     // Control service
     void startService();
 
-    // On load data finished
-    void doOnLoadDone();
+    // update fav table
+    void updateOnLikeButton(int id, boolean isChecked, int index);
+    void updateCountPlay(int id);
+    void updateOnDislikeButton(int id, boolean isChecked);
+    void removeFavorite(int id);
+    void removeFromDatabase(int id);
+
 }

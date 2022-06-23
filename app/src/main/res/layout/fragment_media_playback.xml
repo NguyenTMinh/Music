@@ -65,7 +65,7 @@
             android:background="@android:color/transparent"
             android:scaleX="0.4"
             android:scaleY="0.4"
-            android:src="@drawable/ic_queue_dark" />
+            android:src="@drawable/button_back_to_list" />
 
         <ImageButton
             android:id="@+id/button_menu_now_playing_head"
