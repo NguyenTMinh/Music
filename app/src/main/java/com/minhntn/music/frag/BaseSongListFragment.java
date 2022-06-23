@@ -2,6 +2,7 @@ package com.minhntn.music.frag;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -113,7 +114,9 @@ public abstract class BaseSongListFragment extends Fragment implements ICallBack
     @Override
     public void setSongOnList(boolean onList) {
         mICommunicate.setSongOnList(onList);
-        tempID = mListSong.get(mCurrentIndexSong).getID();
+        if (mCurrentIndexSong != -1) {
+            tempID = mListSong.get(mCurrentIndexSong).getID();
+        }
     }
 
     public void setListSong(List<Song> list) {

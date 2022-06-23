@@ -117,6 +117,9 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
                             mICallBack.setSongOnList(false);
                             mListSong.remove(getAdapterPosition());
                             SongAdapter.this.notifyItemRemoved(getAdapterPosition());
+                            if (getAdapterPosition() < mIndex) {
+                                mIndex--;
+                            }
                         }
                     }
                     return true;

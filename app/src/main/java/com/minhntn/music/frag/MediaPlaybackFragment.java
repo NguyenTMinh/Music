@@ -334,4 +334,8 @@ public class MediaPlaybackFragment extends Fragment {
     public void setCheckedLikeButton(boolean checked) {
         mTBLike.setChecked(checked);
     }
+
+    public Song getCurrentSong() {
+        return mCurrentSong;
+    }
 }

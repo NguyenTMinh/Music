@@ -1,5 +1,7 @@
 package com.minhntn.music.frag;
 
+import android.util.Log;
+
 import com.minhntn.music.R;
 
 public class FavoriteSongsFragment extends BaseSongListFragment{
@@ -20,6 +22,9 @@ public class FavoriteSongsFragment extends BaseSongListFragment{
     public void updateSong(int index, String action) {
         int id = mListSong.get(index).getID();
         if (action.equals(ACTION_REMOVE_FAVORITE)) {
+            if (index < mCurrentIndexSong) {
+                mCurrentIndexSong--;
+            }
             mICommunicate.removeFavorite(id);
         }
     }
