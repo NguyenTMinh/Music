@@ -137,11 +137,15 @@ public class MediaPlaybackFragment extends Fragment {
            mSBSongProgress = mRootView.findViewById(R.id.sb_progress);
            ImageButton mIBForward = mRootView.findViewById(R.id.bt_fwd);
            mIBForward.setOnClickListener(v -> {
-               mICommunicate.playNextSong();
+               if (mICommunicate.isSongOnList()) {
+                   mICommunicate.playNextSong();
+               }
            });
            ImageButton mIBPrevious = mRootView.findViewById(R.id.bt_rew);
            mIBPrevious.setOnClickListener(v -> {
-               mICommunicate.playPreviousSong();
+               if (mICommunicate.isSongOnList()) {
+                   mICommunicate.playPreviousSong();
+               }
            });
 
            mTBShuffle = mRootView.findViewById(R.id.bt_shuffle);

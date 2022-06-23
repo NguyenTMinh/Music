@@ -24,4 +24,11 @@ public class FavoriteSongsFragment extends BaseSongListFragment{
         }
     }
 
+    public void notifyRemoveFavSong(int position) {
+        mSongAdapter.notifyItemRemoved(position);
+    }
+
+    public void notifyAddFavSong() {
+        mSongAdapter.notifyDataSetChanged();
+    }
 }

@@ -58,6 +58,7 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
     private int mCurrentSongIndex = -1;
     private int mCurrentModePlay;
     private int mButtonState;
+    private boolean mIsSongPlayInList;
 
     @Override
     public void onPrepared(MediaPlayer mp) {
@@ -66,29 +67,34 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
 
     @Override
     public void onCompletion(MediaPlayer mp) {
-        switch (mCurrentModePlay) {
-            case MediaPlaybackFragment.PLAY_MODE_REPEAT_SINGLE: {
-                mp.start();
-                mICommunicate.playRepeatOneSong();
-                break;
-            }
-            case MediaPlaybackFragment.PLAY_MODE_SHUFFLE_ON: {
-                mICommunicate.playRandom();
-                break;
-            }
-            case MediaPlaybackFragment.PLAY_MODE_REPEAT_LIST: {
-                mICommunicate.playNextSong();
-                break;
-            }
-            case MediaPlaybackFragment.PLAY_MODE_DEFAULT: {
-                if (mCurrentSongIndex < mSongList.size() - 1) {
+        if (mIsSongPlayInList) {
+            switch (mCurrentModePlay) {
+                case MediaPlaybackFragment.PLAY_MODE_REPEAT_SINGLE: {
+                    mp.start();
+                    mICommunicate.playRepeatOneSong();
+                    break;
+                }
+                case MediaPlaybackFragment.PLAY_MODE_SHUFFLE_ON: {
+                    mICommunicate.playRandom();
+                    break;
+                }
+                case MediaPlaybackFragment.PLAY_MODE_REPEAT_LIST: {
                     mICommunicate.playNextSong();
-                } else {
-                    mICommunicate.pauseMusic(true);
+                    break;
+                }
+                case MediaPlaybackFragment.PLAY_MODE_DEFAULT: {
+                    if (mCurrentSongIndex < mSongList.size() - 1) {
+                        mICommunicate.playNextSong();
+                    } else {
+                        mICommunicate.pauseMusic(true);
+                        setButtonStateNotification();
+                    }
                 }
             }
+        } else {
+            mICommunicate.pauseMusic(true);
+            setButtonStateNotification();
         }
-
     }
 
     public class MediaBinder extends Binder {
@@ -107,6 +113,7 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
         mMusicDBHelper = new MusicDBHelper(this);
         mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         mSharedPreferences = getSharedPreferences(MusicContacts.SHARED_PREF_NAME, MODE_PRIVATE);
+        mIsSongPlayInList = true;
 
         // Register receiver for control action on notification
         IntentFilter intentFilter = new IntentFilter();
@@ -147,6 +154,7 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
      * @param position
      */
     public void playSong(int position) {
+        mIsSongPlayInList = true;
         // Check the index of song should be played
         if (position >= 0) {
             mCurrentSongIndex = position;
@@ -178,9 +186,9 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
     }
 
     public void pauseSong() {
+        mButtonState = 1;
         if (mMediaPlayer.isPlaying()) {
             mMediaPlayer.pause();
-            mButtonState = 1;
             setButtonStateNotification();
 
             // edit SharePreference for start app later
@@ -195,7 +203,9 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
             mMediaPlayer.start();
             mButtonState = 0;
 
-            updateNotification();
+            if (mIsSongPlayInList) {
+                updateNotification();
+            }
 
             // edit SharePreference for start app later
             SharedPreferences.Editor editor = mSharedPreferences.edit();
@@ -221,7 +231,7 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
     }
 
     /**
-     * to prepare the data to media playing when launch app again after the previous session
+     * to prepare the data to media playing when launch app again after close app and relaunch
      * @param index
      */
     public void setMediaUriSource(int index) {
@@ -250,6 +260,18 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
      */
     public void setCurrentModePlay(int modePlay) {
         mCurrentModePlay = modePlay;
+    }
+
+    public void setCurrentSongIndex(int index) {
+        this.mCurrentSongIndex = index;
+    }
+
+    public boolean isSongPlayInList() {
+        return mIsSongPlayInList;
+    }
+
+    public void setIsSongPlayInList(boolean mIsSongPlayInList) {
+        this.mIsSongPlayInList = mIsSongPlayInList;
     }
 
     private void createNotificationChannel() {

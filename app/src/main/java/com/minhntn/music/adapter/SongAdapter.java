@@ -111,6 +111,7 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
                         if (item.getItemId() == R.id.remove_fav) {
                             mListSong.get(getAdapterPosition()).setIsFavorite(false);
                             mICallBack.updateSong(getAdapterPosition(), FavoriteSongsFragment.ACTION_REMOVE_FAVORITE);
+                            mICallBack.setSongOnList(false);
                             mListSong.remove(getAdapterPosition());
                             SongAdapter.this.notifyItemRemoved(getAdapterPosition());
                         }

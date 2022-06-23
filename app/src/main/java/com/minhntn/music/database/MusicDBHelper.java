@@ -181,6 +181,7 @@ public class MusicDBHelper extends SQLiteOpenHelper {
                     cursorSong.getString(3), cursorSong.getString(4), cursorSong.getInt(5),
                     cursorSong.getInt(6), cursorFav.getInt(3), cursorFav.getInt(2), isDislike));
             cursorSong.moveToNext();
+            cursorFav.moveToNext();
         }
         return list;
     }

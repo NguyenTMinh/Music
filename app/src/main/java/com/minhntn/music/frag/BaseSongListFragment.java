@@ -2,8 +2,6 @@ package com.minhntn.music.frag;
 
 import android.content.Context;
 import android.os.Bundle;
-
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -37,6 +35,8 @@ public abstract class BaseSongListFragment extends Fragment implements ICallBack
     protected boolean mIsPlaying;
     protected int mCurrentIndexSong = -1;
     protected boolean mIsServiceAlive;
+
+    private int tempID;
 
     @Override
     public void onAttach(@NonNull Context context) {
@@ -108,6 +108,12 @@ public abstract class BaseSongListFragment extends Fragment implements ICallBack
             mListSong.get(mCurrentIndexSong).setCountOfPlay();
             mICommunicate.updateCountPlay(mListSong.get(mCurrentIndexSong).getID());
         }
+    }
+
+    @Override
+    public void setSongOnList(boolean onList) {
+        mICommunicate.setSongOnList(onList);
+        tempID = mListSong.get(mCurrentIndexSong).getID();
     }
 
     public void setListSong(List<Song> list) {
@@ -186,10 +192,22 @@ public abstract class BaseSongListFragment extends Fragment implements ICallBack
     }
 
     public int getIDFromSongOnList() {
-        if (mCurrentIndexSong != -1) {
-            return mListSong.get(mCurrentIndexSong).getID();
+        try {
+            if (mCurrentIndexSong != -1) {
+                return mListSong.get(mCurrentIndexSong).getID();
+            }
+        } catch (IndexOutOfBoundsException e) {
+            return tempID;
         }
         return -1;
+    }
+
+    public int getCurrentIndexSong() {
+        return this.mCurrentIndexSong;
+    }
+
+    public void setCurrentIndexSong(int indexSong) {
+        mCurrentIndexSong = indexSong;
     }
 
     protected abstract int getMenuRes();

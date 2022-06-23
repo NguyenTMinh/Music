@@ -129,6 +129,12 @@ public class Song implements Parcelable {
         }
     }
 
+    public void resetCountOfPlay() {
+        if (mCountOfPlay >= 3) {
+            this.mCountOfPlay = 0;
+        }
+    }
+
     public int getFavLevel() {
         return mFavLevel;
     }

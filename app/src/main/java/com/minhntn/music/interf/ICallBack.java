@@ -7,4 +7,5 @@ public interface ICallBack {
     void setStatePlay(boolean state);
     void increaseCount();
     void updateSong(int index, String action);
+    void setSongOnList(boolean onList);
 }
