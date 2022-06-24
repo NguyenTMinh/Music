@@ -270,7 +270,6 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
                             }
                             mIndexCurrentSong = mAllSongsFragment.setAdapterIndex(getPositionFromID(mFavoriteSongsFragment.getIDFromSongOnList(),
                                         AllSongsFragment.FRAGMENT_TAG));
-                            Log.d("MinhNTn", "onNavigationItemSelected-all: " + mIndexCurrentSong);
                         }
                         break;
                     }
@@ -289,12 +288,13 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
                             // Check if the favorite list in favFrag have the song that is currently played
                             mCheckIndex = mFavoriteSongsFragment.setAdapterIndex(getPositionFromID(mAllSongsFragment.getIDFromSongOnList(),
                                     FavoriteSongsFragment.FRAGMENT_TAG));
-                            if (mIndexCurrentSong > mFavListSong.size() - 1) {
-                                mIndexCurrentSong = get
-                            } else {
-                                mIndexCurrentSong = (mCheckIndex == -1)? mIndexCurrentSong: mCheckIndex;
-                            }
-
+//
+//                            if (mIndexCurrentSong > mFavListSong.size() - 1) {
+//                                //mIndexCurrentSong = get
+//                            } else {
+//                                mIndexCurrentSong = (mCheckIndex == -1)? mIndexCurrentSong: mCheckIndex;
+//                            }
+                            mIndexCurrentSong = (mCheckIndex == -1)? mIndexCurrentSong: mCheckIndex;
 
                             if (mService != null) {
                                 mService.setSongList(mFavListSong);
@@ -328,7 +328,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
                 return true;
             }
         });
-
+        Log.d("MinhNTn", "onCreate: " + mIndexCurrentSong);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
 
@@ -556,10 +556,6 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
         mCurrentPlayMode = mode;
     }
 
-<<<<<<< HEAD
-    private int getPositionFromID(int id, String inFrag) {
-        if (inFrag.equals(FavoriteSongsFragment.FRAGMENT_TAG)) {
-=======
     /**
      * Return the position in current list when know id of song
      * @param id: the id of song
@@ -568,7 +564,6 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
      */
     private int getPositionFromID(int id, String forFrag) {
         if (forFrag.equals(FavoriteSongsFragment.FRAGMENT_TAG)) {
->>>>>>> 3b6260e696b7cadbca47e65205c9182c21f116d5
             for (int i = 0; i < mFavListSong.size(); i++) {
                 if (mFavListSong.get(i).getID() == id) {
                     return i;
@@ -597,10 +592,14 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
 
         Bundle bundle = getArgumentsSetToFrag();
         final Song song;
-        if (getSupportFragmentManager().findFragmentByTag(FavoriteSongsFragment.FRAGMENT_TAG) != null && mService.isSongPlayInList()) {
-            song = mFavListSong.get(mIndexCurrentSong);
+        if (mService.getCurrentSong() == null) {
+            if (getSupportFragmentManager().findFragmentByTag(FavoriteSongsFragment.FRAGMENT_TAG) != null && mService.isSongPlayInList()) {
+                song = mFavListSong.get(mIndexCurrentSong);
+            } else {
+                song = mListSong.get(mIndexCurrentSong);
+            }
         } else {
-            song = mListSong.get(mIndexCurrentSong);
+            song = mService.getCurrentSong();
         }
 
         FragmentManager fragManager = getSupportFragmentManager();
@@ -964,9 +963,14 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
         } else {
             song.setFavLevel(0);
             song.setIsFavorite(false);
-            mIndexCurrentSong =
-                    getPositionFromID(mFavoriteSongsFragment.getIDFromSongNotOnList(), AllSongsFragment.FRAGMENT_TAG);
-            mFavListSong.remove(song);
+            if (mFavoriteSongsFragment != null) {
+                mCheckIndex =
+                        getPositionFromID(mFavoriteSongsFragment.getIDFromSongNotOnList(), AllSongsFragment.FRAGMENT_TAG);
+                mIndexCurrentSong = (mCheckIndex == -1)? mIndexCurrentSong: mCheckIndex;
+            }
+            if (mFavListSong != null) {
+                mFavListSong.remove(song);
+            }
             mService.setIsSongPlayInList(false);
             if (mFavoriteSongsFragment != null) {
                 mFavoriteSongsFragment.notifyAdapter();
@@ -1013,12 +1017,14 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
     public void updateOnDislikeButton(int id, boolean isChecked) {
         ContentValues values = new ContentValues();
         Uri newUri = Uri.parse(MusicContacts.CONTENT_URI.toString() + "/" + id);
-        Song song;
-
-        if (getSupportFragmentManager().findFragmentByTag(FavoriteSongsFragment.FRAGMENT_TAG) != null && mService.isSongPlayInList()) {
-            song = mFavListSong.get(mIndexCurrentSong);
-        } else {
-            song = mListSong.get(mIndexCurrentSong);
+        Song song = null;
+        for (Song song1: mListSong) {
+            if (song1.getID() == id) {
+                song = song1;
+            }
+        }
+        if (song == null) {
+            song = new Song();
         }
 
         if (isChecked) {
@@ -1026,10 +1032,10 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
             song.setFavLevel(1);
             song.setIsFavorite(false);
             if (mFavoriteSongsFragment != null) {
-                mIndexCurrentSong =
+                mCheckIndex =
                         getPositionFromID(mFavoriteSongsFragment.getIDFromSongNotOnList(), AllSongsFragment.FRAGMENT_TAG);
+                mIndexCurrentSong = (mCheckIndex == -1)? mIndexCurrentSong: mCheckIndex;
             }
-
             mFavListSong.remove(song);
             mService.setIsSongPlayInList(false);
             if (mFavoriteSongsFragment != null) {
@@ -1047,6 +1053,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
         if (row > 0) {
             mMusicDBHelper.updateSong(song);
         }
+        Log.d("MinhNTn", "updateOnDislikeButton: " + mIndexCurrentSong);
     }
 
     @Override

@@ -371,6 +371,13 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
         mNotificationManager.notify(NOTIFICATION_ID, builder.build());
     }
 
+    public Song getCurrentSong() {
+        if (mCurrentSongIndex != -1) {
+            return mSongList.get(mCurrentSongIndex);
+        }
+        return null;
+    }
+
     class MediaBroadcastReceiver extends BroadcastReceiver {
 
         @Override
