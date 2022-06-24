@@ -2,7 +2,6 @@ package com.minhntn.music.frag;
 
 import android.util.Log;
 
-import com.minhntn.music.ActivityMusic;
 import com.minhntn.music.R;
 import com.minhntn.music.model.Song;
 

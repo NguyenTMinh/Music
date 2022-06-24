@@ -30,12 +30,10 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
-import android.os.Parcel;
 import android.os.Parcelable;
 import android.provider.Settings;
 
 import android.util.Log;
-import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -47,7 +45,6 @@ import android.widget.ToggleButton;
 import com.google.android.material.navigation.NavigationView;
 import com.minhntn.music.database.MusicDBHelper;
 import com.minhntn.music.frag.AllSongsFragment;
-import com.minhntn.music.frag.BaseSongListFragment;
 import com.minhntn.music.frag.FavoriteSongsFragment;
 import com.minhntn.music.frag.MediaPlaybackFragment;
 import com.minhntn.music.interf.ICommunicate;
@@ -103,7 +100,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
     private View mNowPlayingView;
     private ToggleButton mTBPlaySongBottom;
 
-    private IDoInAsyncTask mIDoInAsyncTask = new IDoInAsyncTask() {
+    private final IDoInAsyncTask mIDoInAsyncTask = new IDoInAsyncTask() {
         @Override
         public void doInBackground() {
             mMusicDBHelper.loadDataFromMedia();
@@ -559,8 +556,19 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
         mCurrentPlayMode = mode;
     }
 
+<<<<<<< HEAD
     private int getPositionFromID(int id, String inFrag) {
         if (inFrag.equals(FavoriteSongsFragment.FRAGMENT_TAG)) {
+=======
+    /**
+     * Return the position in current list when know id of song
+     * @param id: the id of song
+     * @param forFrag: key to know what list should be used
+     * @return position in that list
+     */
+    private int getPositionFromID(int id, String forFrag) {
+        if (forFrag.equals(FavoriteSongsFragment.FRAGMENT_TAG)) {
+>>>>>>> 3b6260e696b7cadbca47e65205c9182c21f116d5
             for (int i = 0; i < mFavListSong.size(); i++) {
                 if (mFavListSong.get(i).getID() == id) {
                     return i;
@@ -975,7 +983,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
     }
 
     /**
-     * update count of play times and also update favorite if condition required matches
+     * update count of play times and also update favorite if condition required meets
      * @param id: id of song need to be updated
      */
     @Override

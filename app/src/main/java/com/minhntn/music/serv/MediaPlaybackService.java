@@ -142,6 +142,7 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
 
     @Override
     public void onDestroy() {
+        Log.d("minhntn", "onDestroy: service");
         if (mMediaPlayer.isPlaying()) {
             // write something here
         }
