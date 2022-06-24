@@ -112,8 +112,7 @@ public abstract class BaseSongListFragment extends Fragment implements ICallBack
     }
 
     @Override
-    public void setSongOnList(boolean onList) {
-        mICommunicate.setSongOnList(onList);
+    public void setSongOnList() {
         if (mCurrentIndexSong != -1) {
             tempID = mListSong.get(mCurrentIndexSong).getID();
         }
@@ -129,6 +128,10 @@ public abstract class BaseSongListFragment extends Fragment implements ICallBack
         mSongAdapter.notifyDataSetChanged();
     }
 
+    public void notifyAdapter() {
+        mSongAdapter.notifyDataSetChanged();
+    }
+
     public int setAdapterIndex(int index) {
         if (index != -1) {
             if (mCurrentIndexSong != -1) {
@@ -141,6 +144,10 @@ public abstract class BaseSongListFragment extends Fragment implements ICallBack
             mCurrentIndexSong = index;
         }
         return mCurrentIndexSong;
+    }
+
+    public void resetAdapterIndex() {
+        mSongAdapter.setIndex(-1);
     }
 
     public void setButtonState(boolean state) {
@@ -200,6 +207,13 @@ public abstract class BaseSongListFragment extends Fragment implements ICallBack
                 return mListSong.get(mCurrentIndexSong).getID();
             }
         } catch (IndexOutOfBoundsException e) {
+            return tempID;
+        }
+        return -1;
+    }
+
+    public int getIDFromSongNotOnList() {
+        if (mCurrentIndexSong == -1) {
             return tempID;
         }
         return -1;

@@ -338,4 +338,9 @@ public class MediaPlaybackFragment extends Fragment {
     public Song getCurrentSong() {
         return mCurrentSong;
     }
+
+    public void resetListener() {
+        mTBLike.setOnCheckedChangeListener(null);
+        mTBDislike.setOnCheckedChangeListener(null);
+    }
 }

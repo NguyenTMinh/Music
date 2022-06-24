@@ -112,14 +112,12 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
                         }
                     } else {
                         if (item.getItemId() == R.id.remove_fav) {
-                            mListSong.get(getAdapterPosition()).setIsFavorite(false);
-                            mICallBack.updateSong(getAdapterPosition(), FavoriteSongsFragment.ACTION_REMOVE_FAVORITE);
-                            mICallBack.setSongOnList(false);
-                            mListSong.remove(getAdapterPosition());
-                            SongAdapter.this.notifyItemRemoved(getAdapterPosition());
+                            // Decrease index if the song remove has position lower than the current song playing
                             if (getAdapterPosition() < mIndex) {
                                 mIndex--;
                             }
+                            mICallBack.setSongOnList();
+                            mICallBack.updateSong(getAdapterPosition(), FavoriteSongsFragment.ACTION_REMOVE_FAVORITE);
                         }
                     }
                     return true;
