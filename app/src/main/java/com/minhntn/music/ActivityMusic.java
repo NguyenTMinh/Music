@@ -63,8 +63,10 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
     public static final String KEY_IS_LAND = "KEY_IS_LAND";
     public static final String KEY_INDEX_CURRENT = "KEY_INDEX_CURRENT";
     public static final String KEY_LIST_SONG = "KEY_LIST_SONG";
+    public static final String KEY_FAV_SONG = "KEY_FAV_SONG";
     public static final String KEY_MUSIC_PLAYING = "KEY_MUSIC_PLAYING";
     public static final String KEY_SCREEN_ROTATE = "KEY_SCREEN_ROTATE";
+    public static final String KEY_CHECK_INDEX = "KEY_CHECK_INDEX";
     public static final int UPDATE_FROM_FRAG = -2;
     private static final String KEY_APP_STARTED = "KEY_APP_STARTED";
 
@@ -120,7 +122,6 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
                 }
                 bindService(intent, mServiceConnection, Service.BIND_AUTO_CREATE);
             }
-
         }
     };
 
@@ -162,9 +163,11 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
         mMusicDBHelper = new MusicDBHelper(this);
 
         checkAppPermission();
+        mFavListSong = new ArrayList<>();
 
         if (savedInstanceState != null) {
             mListSong = savedInstanceState.getParcelableArrayList(KEY_LIST_SONG);
+            mFavListSong = savedInstanceState.getParcelableArrayList(KEY_FAV_SONG);
             mIndexCurrentSong = savedInstanceState.getInt(KEY_INDEX_CURRENT);
             mIsPlaying = savedInstanceState.getBoolean(KEY_MUSIC_PLAYING, false);
             mIsRotated = savedInstanceState.getBoolean(KEY_SCREEN_ROTATE, false);
@@ -172,6 +175,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
                     MediaPlaybackFragment.PLAY_MODE_DEFAULT);
             mServiceAlive = savedInstanceState.getBoolean(MusicContacts.PREF_SERVICE_ALIVE, false);
             mIsAppStarted = savedInstanceState.getBoolean(KEY_APP_STARTED, false);
+            mCheckIndex = savedInstanceState.getInt(KEY_CHECK_INDEX, -1);
         } else {
             mListSong = mMusicDBHelper.getAllSongs();
             mIndexCurrentSong = mSharedPreferences.getInt(MusicContacts.PREF_SONG_CURRENT, -1);
@@ -181,7 +185,6 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
             mIsPlaying = mSharedPreferences.getBoolean(MusicContacts.PREF_MUSIC_PLAYING, false);
         }
         mListAlbum = mMusicDBHelper.getAllAlbums();
-        mFavListSong = new ArrayList<>();
 
         mIsLand = getResources().getBoolean(R.bool.is_land);
 
@@ -192,7 +195,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
                 transition(mIndexCurrentSong);
             });
         }
-        
+
         Bundle bundle = new Bundle();
         bundle.putBoolean(KEY_IS_LAND, mIsLand);
         bundle.putBoolean(KEY_MUSIC_PLAYING, mIsPlaying);
@@ -204,6 +207,8 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
                 getSupportFragmentManager().findFragmentByTag(AllSongsFragment.FRAGMENT_TAG);
         mMediaPlaybackFragment = (MediaPlaybackFragment)
                 getSupportFragmentManager().findFragmentByTag(MediaPlaybackFragment.FRAGMENT_TAG);
+        mFavoriteSongsFragment = (FavoriteSongsFragment)
+                getSupportFragmentManager().findFragmentByTag(FavoriteSongsFragment.FRAGMENT_TAG);
         if (mAllSongsFragment == null) {
             mAllSongsFragment = new AllSongsFragment();
         } else {
@@ -219,11 +224,28 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
             mMediaPlaybackFragment = (MediaPlaybackFragment) recreateFragment(mMediaPlaybackFragment);
         }
 
+        if (mFavoriteSongsFragment == null) {
+            mFavoriteSongsFragment = new FavoriteSongsFragment();
+        } else {
+            getSupportFragmentManager().beginTransaction().remove(mFavoriteSongsFragment)
+                    .commit();
+            mFavoriteSongsFragment = (FavoriteSongsFragment) recreateFragment(mFavoriteSongsFragment);
+        }
+
         // Set the data needed to fragment
         mAllSongsFragment.setListSong(mListSong);
-        mAllSongsFragment.setAdapterIndex(mIndexCurrentSong);
         mAllSongsFragment.setArguments(bundle);
+
+        mFavoriteSongsFragment.setListSong(mFavListSong);
+        mFavoriteSongsFragment.setArguments(bundle);
+
         mMediaPlaybackFragment.setArguments(bundle);
+
+        if (getSupportFragmentManager().findFragmentByTag(FavoriteSongsFragment.FRAGMENT_TAG) != null) {
+            mFavoriteSongsFragment.setAdapterIndex(mIndexCurrentSong);
+        } else {
+            mAllSongsFragment.setAdapterIndex(mIndexCurrentSong);
+        }
 
         // Check the orientation of device so then app can behave correctly
         if (mIsLand) {
@@ -235,16 +257,28 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
             }, 100);
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mMediaPlaybackFragment,
                     MediaPlaybackFragment.FRAGMENT_TAG).commit();
-            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container_1, mAllSongsFragment,
-                    AllSongsFragment.FRAGMENT_TAG).commit();
+            if (getSupportFragmentManager().findFragmentByTag(FavoriteSongsFragment.FRAGMENT_TAG) != null) {
+                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container_1, mFavoriteSongsFragment,
+                        FavoriteSongsFragment.FRAGMENT_TAG).commit();
+            } else {
+                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container_1, mAllSongsFragment,
+                        AllSongsFragment.FRAGMENT_TAG).commit();
+            }
             if (savedInstanceState != null) {
                 if (mIndexCurrentSong != -1) {
                     transition(mIndexCurrentSong);
                 }
             }
         } else {
-            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mAllSongsFragment,
-                    AllSongsFragment.FRAGMENT_TAG).commit();
+            if (getSupportFragmentManager().findFragmentByTag(FavoriteSongsFragment.FRAGMENT_TAG) != null) {
+                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mAllSongsFragment,
+                        AllSongsFragment.FRAGMENT_TAG).commit();
+                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mFavoriteSongsFragment,
+                        FavoriteSongsFragment.FRAGMENT_TAG).addToBackStack(null).commit();
+            } else {
+                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mAllSongsFragment,
+                        AllSongsFragment.FRAGMENT_TAG).commit();
+            }
         }
 
         // bind service to this activity
@@ -265,11 +299,19 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
                     case R.id.action_all_songs: {
                         if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
                             getSupportFragmentManager().popBackStack();
+
+                            if (mFavoriteSongsFragment != null) {
+                                try {
+                                    mIndexCurrentSong = mAllSongsFragment.setAdapterIndex(getPositionFromID(mService.getExactSong().getID(),
+                                            AllSongsFragment.FRAGMENT_TAG));
+                                } catch (Exception e) {
+                                    mIndexCurrentSong = mAllSongsFragment.setAdapterIndex(getPositionFromID(mFavoriteSongsFragment.getIDFromSongOnList(),
+                                            AllSongsFragment.FRAGMENT_TAG));
+                                }
+                            }
                             if (mService != null) {
                                 mService.setSongList(mListSong);
                             }
-                            mIndexCurrentSong = mAllSongsFragment.setAdapterIndex(getPositionFromID(mFavoriteSongsFragment.getIDFromSongOnList(),
-                                        AllSongsFragment.FRAGMENT_TAG));
                         }
                         break;
                     }
@@ -288,13 +330,12 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
                             // Check if the favorite list in favFrag have the song that is currently played
                             mCheckIndex = mFavoriteSongsFragment.setAdapterIndex(getPositionFromID(mAllSongsFragment.getIDFromSongOnList(),
                                     FavoriteSongsFragment.FRAGMENT_TAG));
-//
-//                            if (mIndexCurrentSong > mFavListSong.size() - 1) {
-//                                //mIndexCurrentSong = get
-//                            } else {
-//                                mIndexCurrentSong = (mCheckIndex == -1)? mIndexCurrentSong: mCheckIndex;
-//                            }
+
                             mIndexCurrentSong = (mCheckIndex == -1)? mIndexCurrentSong: mCheckIndex;
+                            if (mIndexCurrentSong > mFavListSong.size()) {
+                                mService.setIsSongPlayInList(false);
+                            }
+
 
                             if (mService != null) {
                                 mService.setSongList(mFavListSong);
@@ -328,8 +369,8 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
                 return true;
             }
         });
-        Log.d("MinhNTn", "onCreate: " + mIndexCurrentSong);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        Log.d("MinhNTn", "onCreate: " + mFavListSong.size());
     }
 
     private void checkUpdateDatabase() {
@@ -452,7 +493,9 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
     protected void onResume() {
         super.onResume();
         if (mIndexCurrentSong != -1) {
-            onResumeFromBackScreen();
+            if (getSupportFragmentManager().findFragmentByTag(FavoriteSongsFragment.FRAGMENT_TAG) == null) {
+                onResumeFromBackScreen();
+            }
         }
     }
 
@@ -475,12 +518,14 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putParcelableArrayList(KEY_LIST_SONG, (ArrayList<? extends Parcelable>) mListSong);
+        outState.putParcelableArrayList(KEY_FAV_SONG, (ArrayList<? extends Parcelable>) mFavListSong);
         outState.putInt(KEY_INDEX_CURRENT, mIndexCurrentSong);
         outState.putBoolean(KEY_MUSIC_PLAYING, mIsPlaying);
         outState.putBoolean(KEY_SCREEN_ROTATE, mIsRotated);
         outState.putInt(MusicContacts.PREF_SONG_PLAY_MODE, mCurrentPlayMode);
         outState.putBoolean(MusicContacts.PREF_SERVICE_ALIVE, mServiceAlive);
         outState.putBoolean(KEY_APP_STARTED, mIsAppStarted);
+        outState.putInt(KEY_CHECK_INDEX, mCheckIndex);
     }
 
     /* Recreate with the existed fragment, so that it can move from a different container to another container
@@ -527,10 +572,19 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
     private Bundle getArgumentsSetToFrag() {
         Bundle bundle = new Bundle();
         Song song;
-        if (getSupportFragmentManager().findFragmentByTag(FavoriteSongsFragment.FRAGMENT_TAG) != null && mService.isSongPlayInList()) {
-            song = mFavListSong.get(mIndexCurrentSong);
-        } else {
-            song = mListSong.get(mIndexCurrentSong);
+
+        try {
+            if (getSupportFragmentManager().findFragmentByTag(FavoriteSongsFragment.FRAGMENT_TAG) != null && mService.isSongPlayInList()) {
+                song = mFavListSong.get(mIndexCurrentSong);
+            } else {
+                song = mListSong.get(mIndexCurrentSong);
+            }
+        } catch (NullPointerException e) {
+            if (getSupportFragmentManager().findFragmentByTag(FavoriteSongsFragment.FRAGMENT_TAG) != null && mCheckIndex != -1) {
+                song = mFavListSong.get(mIndexCurrentSong);
+            } else {
+                song = mListSong.get(mIndexCurrentSong);
+            }
         }
 
         byte[] cover = new byte[1];
@@ -585,23 +639,29 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
     @Override
     public void transition(int position) {
         mIndexCurrentSong = position;
-
         SharedPreferences.Editor editor = mSharedPreferences.edit();
         editor.putInt(MusicContacts.PREF_SONG_CURRENT, mIndexCurrentSong);
         editor.apply();
 
         Bundle bundle = getArgumentsSetToFrag();
         final Song song;
-        if (mService.getCurrentSong() == null) {
+        Song song1;
+
+        try {
             if (getSupportFragmentManager().findFragmentByTag(FavoriteSongsFragment.FRAGMENT_TAG) != null && mService.isSongPlayInList()) {
-                song = mFavListSong.get(mIndexCurrentSong);
+                song1 = mFavListSong.get(mIndexCurrentSong);
             } else {
-                song = mListSong.get(mIndexCurrentSong);
+                song1 = mListSong.get(mIndexCurrentSong);
             }
-        } else {
-            song = mService.getCurrentSong();
+        } catch (NullPointerException e) {
+            if (getSupportFragmentManager().findFragmentByTag(FavoriteSongsFragment.FRAGMENT_TAG) != null && mCheckIndex != -1) {
+                song1 = mFavListSong.get(mIndexCurrentSong);
+            } else {
+                song1 = mListSong.get(mIndexCurrentSong);
+            }
         }
 
+        song = song1;
         FragmentManager fragManager = getSupportFragmentManager();
 
         if (mIsLand) {
@@ -928,61 +988,67 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
     }
 
     @Override
-    public void updateOnLikeButton(int id, boolean isChecked, int index) {
-        ContentValues values = new ContentValues();
-        Uri newUri = Uri.parse(MusicContacts.CONTENT_URI.toString() + "/" + id);
-        Song song = null;
-        if (index == UPDATE_FROM_FRAG) {
-            song = mListSong.get(mIndexCurrentSong);
-        } else {
-            for (Song song1: mListSong) {
-                if (song1.getID() == id) {
-                    song = song1;
-                    break;
+    public void updateOnLikeButton(int id, boolean isChecked, int index, boolean active) {
+        if (active) {
+            ContentValues values = new ContentValues();
+            Uri newUri = Uri.parse(MusicContacts.CONTENT_URI.toString() + "/" + id);
+            Song song = null;
+            if (index == UPDATE_FROM_FRAG) {
+                if (getSupportFragmentManager().findFragmentByTag(FavoriteSongsFragment.FRAGMENT_TAG) != null && mService.isSongPlayInList()) {
+                    song = mFavListSong.get(mIndexCurrentSong);
+                } else {
+                    song = mListSong.get(mIndexCurrentSong);
+                }
+            } else {
+                for (Song song1: mListSong) {
+                    if (song1.getID() == id) {
+                        song = song1;
+                        break;
+                    }
+                }
+                if (song == null) {
+                    song = new Song();
                 }
             }
-            if (song == null) {
-                song = new Song();
-            }
-        }
 
-        if (isChecked) {
-            song.setFavLevel(2);
-            song.setIsFavorite(true);
-            song.setDislike(false);
-            if (mFavoriteSongsFragment != null) {
-                if (!mFavListSong.contains(song)) {
-                    mFavListSong.add(song);
-                    mFavoriteSongsFragment.setAdapterIndex(mFavListSong.size() -1);
-                    mFavoriteSongsFragment.notifyAddFavSong();
+            if (isChecked) {
+                song.setFavLevel(2);
+                song.setIsFavorite(true);
+                song.setDislike(false);
+                if (mFavoriteSongsFragment != null) {
+                    if (!mFavListSong.contains(song)) {
+                        mFavListSong.add(song);
+                        mFavoriteSongsFragment.setAdapterIndex(mFavListSong.size() -1);
+                        mFavoriteSongsFragment.notifyAddFavSong();
+                    }
+                }
+                if (mService != null) {
+                    mService.setIsSongPlayInList(true);
+                }
+            } else {
+                song.setFavLevel(0);
+                song.setIsFavorite(false);
+                if (mFavoriteSongsFragment != null) {
+                    mCheckIndex =
+                            getPositionFromID(mFavoriteSongsFragment.getIDFromSongNotOnList(), AllSongsFragment.FRAGMENT_TAG);
+                    mIndexCurrentSong = (mCheckIndex == -1)? mIndexCurrentSong: mCheckIndex;
+                }
+                if (mFavListSong != null) {
+                    mFavListSong.remove(song);
+                }
+                mService.setIsSongPlayInList(false);
+                if (mFavoriteSongsFragment != null) {
+                    mFavoriteSongsFragment.notifyAdapter();
+                    mFavoriteSongsFragment.setCurrentIndexSong(-1);
+                    mFavoriteSongsFragment.resetAdapterIndex();
                 }
             }
-            if (mService != null) {
-                mService.setIsSongPlayInList(true);
-            }
-        } else {
-            song.setFavLevel(0);
-            song.setIsFavorite(false);
-            if (mFavoriteSongsFragment != null) {
-                mCheckIndex =
-                        getPositionFromID(mFavoriteSongsFragment.getIDFromSongNotOnList(), AllSongsFragment.FRAGMENT_TAG);
-                mIndexCurrentSong = (mCheckIndex == -1)? mIndexCurrentSong: mCheckIndex;
-            }
-            if (mFavListSong != null) {
-                mFavListSong.remove(song);
-            }
-            mService.setIsSongPlayInList(false);
-            if (mFavoriteSongsFragment != null) {
-                mFavoriteSongsFragment.notifyAdapter();
-                mFavoriteSongsFragment.setCurrentIndexSong(-1);
-                mFavoriteSongsFragment.resetAdapterIndex();
-            }
-        }
 
-        values.put(MusicContacts.FAVORITE_COLUMN_IS_FAVORITE, song.getFavLevel());
-        int row = getContentResolver().update(newUri, values, null, null);
-        if (row > 0) {
-            mMusicDBHelper.updateSong(song);
+            values.put(MusicContacts.FAVORITE_COLUMN_IS_FAVORITE, song.getFavLevel());
+            int row = getContentResolver().update(newUri, values, null, null);
+            if (row > 0) {
+                mMusicDBHelper.updateSong(song);
+            }
         }
     }
 
@@ -1014,46 +1080,50 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
     }
 
     @Override
-    public void updateOnDislikeButton(int id, boolean isChecked) {
-        ContentValues values = new ContentValues();
-        Uri newUri = Uri.parse(MusicContacts.CONTENT_URI.toString() + "/" + id);
-        Song song = null;
-        for (Song song1: mListSong) {
-            if (song1.getID() == id) {
-                song = song1;
+    public void updateOnDislikeButton(int id, boolean isChecked, boolean active) {
+        if (active) {
+            ContentValues values = new ContentValues();
+            Uri newUri = Uri.parse(MusicContacts.CONTENT_URI.toString() + "/" + id);
+            Song song = null;
+            for (Song song1: mListSong) {
+                if (song1.getID() == id) {
+                    song = song1;
+                }
             }
-        }
-        if (song == null) {
-            song = new Song();
-        }
+            if (song == null) {
+                song = new Song();
+            }
 
-        if (isChecked) {
-            song.setDislike(true);
-            song.setFavLevel(1);
-            song.setIsFavorite(false);
-            if (mFavoriteSongsFragment != null) {
-                mCheckIndex =
-                        getPositionFromID(mFavoriteSongsFragment.getIDFromSongNotOnList(), AllSongsFragment.FRAGMENT_TAG);
-                mIndexCurrentSong = (mCheckIndex == -1)? mIndexCurrentSong: mCheckIndex;
+            if (isChecked) {
+                song.setDislike(true);
+                song.setFavLevel(1);
+                song.setIsFavorite(false);
+                if (mFavoriteSongsFragment != null) {
+                    mFavoriteSongsFragment.setSongOnList();
+                    mCheckIndex =
+                            getPositionFromID(mFavoriteSongsFragment.getIDFromSongNotOnList(), AllSongsFragment.FRAGMENT_TAG);
+                    mIndexCurrentSong = (mCheckIndex == -1)? mIndexCurrentSong: mCheckIndex;
+                }
+                mFavListSong.remove(song);
+                if (mService != null) {
+                    mService.setIsSongPlayInList(false);
+                }
+                if (mFavoriteSongsFragment != null) {
+                    mFavoriteSongsFragment.notifyAdapter();
+                    mFavoriteSongsFragment.setCurrentIndexSong(-1);
+                    mFavoriteSongsFragment.resetAdapterIndex();
+                }
+            } else {
+                song.setFavLevel(0);
+                song.setDislike(false);
             }
-            mFavListSong.remove(song);
-            mService.setIsSongPlayInList(false);
-            if (mFavoriteSongsFragment != null) {
-                mFavoriteSongsFragment.notifyAdapter();
-                mFavoriteSongsFragment.setCurrentIndexSong(-1);
-                mFavoriteSongsFragment.resetAdapterIndex();
-            }
-        } else {
-            song.setFavLevel(0);
-            song.setDislike(false);
-        }
 
-        values.put(MusicContacts.FAVORITE_COLUMN_IS_FAVORITE, song.getFavLevel());
-        int row = getContentResolver().update(newUri, values, null, null);
-        if (row > 0) {
-            mMusicDBHelper.updateSong(song);
+            values.put(MusicContacts.FAVORITE_COLUMN_IS_FAVORITE, song.getFavLevel());
+            int row = getContentResolver().update(newUri, values, null, null);
+            if (row > 0) {
+                mMusicDBHelper.updateSong(song);
+            }
         }
-        Log.d("MinhNTn", "updateOnDislikeButton: " + mIndexCurrentSong);
     }
 
     @Override
@@ -1067,17 +1137,19 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
                 song = mFavListSong.get(i);
                 // Update the check song on list
                 if (mService != null) {
-                    if (mFavListSong.get(mIndexCurrentSong).getID() == song.getID()) {
-                        mService.setIsSongPlayInList(false);
-                        if (mFavoriteSongsFragment != null) {
-                            mFavoriteSongsFragment.setCurrentIndexSong(-1);
-                            mIndexCurrentSong =
-                                    getPositionFromID(mFavoriteSongsFragment.getIDFromSongNotOnList(), AllSongsFragment.FRAGMENT_TAG);
-                        }
+                    if (mService.isSongPlayInList()) {
+                        if (mFavListSong.get(mIndexCurrentSong).getID() == song.getID()) {
+                            mService.setIsSongPlayInList(false);
+                            if (mFavoriteSongsFragment != null) {
+                                mFavoriteSongsFragment.setCurrentIndexSong(-1);
+                                mIndexCurrentSong =
+                                        getPositionFromID(mFavoriteSongsFragment.getIDFromSongNotOnList(), AllSongsFragment.FRAGMENT_TAG);
+                            }
 
-                    } else {
-                        if (mIndexCurrentSong > i) {
-                            mIndexCurrentSong--;
+                        } else {
+                            if (mIndexCurrentSong > i) {
+                                mIndexCurrentSong--;
+                            }
                         }
                     }
                 }
@@ -1115,7 +1187,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
         String whereClause = MusicContacts.SONG_COLUMN_ID + " = ?";
         String[] selectionArgs = new String[] {String.valueOf(id)};
         Song song = null;
-        
+
         for (Song song1: mListSong) {
             if (song1.getID() == id) {
                 song = song1;

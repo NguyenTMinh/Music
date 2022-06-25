@@ -29,9 +29,9 @@ public interface ICommunicate {
     void startService();
 
     // update fav table
-    void updateOnLikeButton(int id, boolean isChecked, int index);
+    void updateOnLikeButton(int id, boolean isChecked, int index, boolean active);
     void updateCountPlay(int id);
-    void updateOnDislikeButton(int id, boolean isChecked);
+    void updateOnDislikeButton(int id, boolean isChecked, boolean active);
     void removeFavorite(int id);
     void removeFromDatabase(int id);
 

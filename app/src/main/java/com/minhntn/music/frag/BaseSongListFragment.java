@@ -213,10 +213,7 @@ public abstract class BaseSongListFragment extends Fragment implements ICallBack
     }
 
     public int getIDFromSongNotOnList() {
-        if (mCurrentIndexSong == -1) {
-            return tempID;
-        }
-        return -1;
+        return tempID;
     }
 
     public int getCurrentIndexSong() {
@@ -225,6 +222,10 @@ public abstract class BaseSongListFragment extends Fragment implements ICallBack
 
     public void setCurrentIndexSong(int indexSong) {
         mCurrentIndexSong = indexSong;
+    }
+
+    public int getTempID() {
+        return this.tempID;
     }
 
     protected abstract int getMenuRes();

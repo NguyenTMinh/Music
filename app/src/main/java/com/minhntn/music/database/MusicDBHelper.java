@@ -100,9 +100,6 @@ public class MusicDBHelper extends SQLiteOpenHelper {
          * But first check the exist of row
          * */
         Song song1 = getSongWithExactDetail(song);
-//        if (song1 != null) {
-//            Log.d("MinhNTn", "insertTB: " + song1.getID());
-//        }
         if (song1 == null) {
             String songID = String.valueOf(song.getID());
             String songTitle = song.getTitle();

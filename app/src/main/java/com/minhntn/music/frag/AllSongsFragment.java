@@ -2,6 +2,7 @@ package com.minhntn.music.frag;
 
 import android.util.Log;
 
+import com.minhntn.music.ActivityMusic;
 import com.minhntn.music.R;
 import com.minhntn.music.model.Song;
 
@@ -23,7 +24,7 @@ public class AllSongsFragment extends BaseSongListFragment {
     @Override
     public void updateSong(int index, String action) {
         if (action.equals(ACTION_ADD_FAVORITE)) {
-            mICommunicate.updateOnLikeButton(mListSong.get(index).getID(), true, index);
+            mICommunicate.updateOnLikeButton(mListSong.get(index).getID(), true, index, true);
         } else {
             if (index < mCurrentIndexSong) {
                 mCurrentIndexSong--;

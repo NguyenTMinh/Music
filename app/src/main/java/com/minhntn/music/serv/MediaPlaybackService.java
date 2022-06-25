@@ -54,6 +54,7 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
     private RemoteViews remoteViewsDefault;
     private RemoteViews remoteViewsBig;
     private SharedPreferences mSharedPreferences;
+    private Song mCurrentSong;
 
     private int mCurrentSongIndex = -1;
     private int mCurrentModePlay;
@@ -142,7 +143,6 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
 
     @Override
     public void onDestroy() {
-        Log.d("minhntn", "onDestroy: service");
         if (mMediaPlayer.isPlaying()) {
             // write something here
         }
@@ -162,7 +162,7 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
         }
 
         try {
-            Song song = mSongList.get(mCurrentSongIndex);
+            mCurrentSong = mSongList.get(mCurrentSongIndex);
             try {
                 if (mMediaPlayer.isPlaying()){
                     mMediaPlayer.pause();
@@ -170,7 +170,7 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
                 }
 
                 mMediaPlayer.reset();
-                mMediaPlayer.setDataSource(this, song.getUri());
+                mMediaPlayer.setDataSource(this, mCurrentSong.getUri());
                 mMediaPlayer.setOnPreparedListener(this);
                 mMediaPlayer.prepareAsync();
                 mMediaPlayer.setOnCompletionListener(this);
@@ -347,8 +347,12 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
     }
 
     private void updateNotification() {
-        Song song = mSongList.get(mCurrentSongIndex);
-        new UpdateNotificationAsync().execute(song.getID());
+        try {
+            Song song = mSongList.get(mCurrentSongIndex);
+            new UpdateNotificationAsync().execute(song.getID());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void playOrPause() {
@@ -373,9 +377,17 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
 
     public Song getCurrentSong() {
         if (mCurrentSongIndex != -1) {
-            return mSongList.get(mCurrentSongIndex);
+            try {
+                return mSongList.get(mCurrentSongIndex);
+            } catch (IndexOutOfBoundsException e) {
+                return null;
+            }
         }
         return null;
+    }
+
+    public Song getExactSong() {
+        return mCurrentSong;
     }
 
     class MediaBroadcastReceiver extends BroadcastReceiver {
