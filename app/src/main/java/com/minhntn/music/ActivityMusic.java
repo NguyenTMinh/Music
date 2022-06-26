@@ -67,6 +67,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
     public static final String KEY_MUSIC_PLAYING = "KEY_MUSIC_PLAYING";
     public static final String KEY_SCREEN_ROTATE = "KEY_SCREEN_ROTATE";
     public static final String KEY_CHECK_INDEX = "KEY_CHECK_INDEX";
+    public static final String KEY_CHECK_FAV_FRAG = "KEY_CHECK_FAV_FRAG";
     public static final int UPDATE_FROM_FRAG = -2;
     private static final String KEY_APP_STARTED = "KEY_APP_STARTED";
 
@@ -92,6 +93,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
     // Condition to update data when start app but not when the callback is called (prevent app from reset list song after screen rotate)
     private boolean mIsAppStarted;
     private int mCheckIndex;
+    private boolean mIsFavFragOnScreen;
 
     // Navigation Drawer
     private DrawerLayout mDrawerLayout;
@@ -125,7 +127,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
         }
     };
 
-    private ServiceConnection mServiceConnection = new ServiceConnection() {
+    private final ServiceConnection mServiceConnection = new ServiceConnection() {
 
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -176,6 +178,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
             mServiceAlive = savedInstanceState.getBoolean(MusicContacts.PREF_SERVICE_ALIVE, false);
             mIsAppStarted = savedInstanceState.getBoolean(KEY_APP_STARTED, false);
             mCheckIndex = savedInstanceState.getInt(KEY_CHECK_INDEX, -1);
+            mIsFavFragOnScreen = savedInstanceState.getBoolean(KEY_CHECK_FAV_FRAG, false);
         } else {
             mListSong = mMusicDBHelper.getAllSongs();
             mIndexCurrentSong = mSharedPreferences.getInt(MusicContacts.PREF_SONG_CURRENT, -1);
@@ -241,7 +244,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
 
         mMediaPlaybackFragment.setArguments(bundle);
 
-        if (getSupportFragmentManager().findFragmentByTag(FavoriteSongsFragment.FRAGMENT_TAG) != null) {
+        if (mIsFavFragOnScreen) {
             mFavoriteSongsFragment.setAdapterIndex(mIndexCurrentSong);
         } else {
             mAllSongsFragment.setAdapterIndex(mIndexCurrentSong);
@@ -257,9 +260,14 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
             }, 100);
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mMediaPlaybackFragment,
                     MediaPlaybackFragment.FRAGMENT_TAG).commit();
-            if (getSupportFragmentManager().findFragmentByTag(FavoriteSongsFragment.FRAGMENT_TAG) != null) {
+            if (mIsFavFragOnScreen) {
+                Log.d("MinhNTn", "onCreate: here " + getSupportFragmentManager().getBackStackEntryCount()
+                        + "," + getSupportFragmentManager().findFragmentByTag(AllSongsFragment.FRAGMENT_TAG)
+                        + "," + getSupportFragmentManager().findFragmentByTag(FavoriteSongsFragment.FRAGMENT_TAG));
+                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container_1, mAllSongsFragment,
+                        AllSongsFragment.FRAGMENT_TAG).commitNow();
                 getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container_1, mFavoriteSongsFragment,
-                        FavoriteSongsFragment.FRAGMENT_TAG).commit();
+                        FavoriteSongsFragment.FRAGMENT_TAG).addToBackStack(null).commit();
             } else {
                 getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container_1, mAllSongsFragment,
                         AllSongsFragment.FRAGMENT_TAG).commit();
@@ -270,7 +278,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
                 }
             }
         } else {
-            if (getSupportFragmentManager().findFragmentByTag(FavoriteSongsFragment.FRAGMENT_TAG) != null) {
+            if (mIsFavFragOnScreen) {
                 getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mAllSongsFragment,
                         AllSongsFragment.FRAGMENT_TAG).commit();
                 getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mFavoriteSongsFragment,
@@ -299,7 +307,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
                     case R.id.action_all_songs: {
                         if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
                             getSupportFragmentManager().popBackStack();
-
+                            mIsFavFragOnScreen = false;
                             if (mFavoriteSongsFragment != null) {
                                 try {
                                     mIndexCurrentSong = mAllSongsFragment.setAdapterIndex(getPositionFromID(mService.getExactSong().getID(),
@@ -308,6 +316,8 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
                                     mIndexCurrentSong = mAllSongsFragment.setAdapterIndex(getPositionFromID(mFavoriteSongsFragment.getIDFromSongOnList(),
                                             AllSongsFragment.FRAGMENT_TAG));
                                 }
+                                // Free space
+                                mFavoriteSongsFragment = null;
                             }
                             if (mService != null) {
                                 mService.setSongList(mListSong);
@@ -316,6 +326,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
                         break;
                     }
                     case R.id.action_fav_songs: {
+                        mIsFavFragOnScreen = true;
                         if (getSupportFragmentManager().findFragmentByTag(FavoriteSongsFragment.FRAGMENT_TAG) == null) {
                             mFavListSong.clear();
                             for (Song song: mListSong) {
@@ -360,7 +371,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
                                         .commit();
                             }
                         }
-
+                        break;
                     }
                 }
                 if (mDrawerLayout.isDrawerOpen(GravityCompat.START)) {
@@ -370,7 +381,6 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
             }
         });
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        Log.d("MinhNTn", "onCreate: " + mFavListSong.size());
     }
 
     private void checkUpdateDatabase() {
@@ -463,17 +473,22 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
 
     @Override
     protected void onDestroy() {
+        SharedPreferences.Editor editor = mSharedPreferences.edit();
+        if (mService != null) {
+            editor.putBoolean(MusicContacts.PREF_MUSIC_PLAYING, mService.isMediaPlaying());
+        }
+
         if (!isAppRunning()) {
             unbindService(mServiceConnection);
         }
 
-        if (!mService.isMediaPlaying() && !isAppRunning()) {
-            stopService(intent);
-            mServiceAlive = false;
+        if (mService != null) {
+            if (!mService.isMediaPlaying() && !isAppRunning()) {
+                stopService(intent);
+                mServiceAlive = false;
+            }
         }
-        SharedPreferences.Editor editor = mSharedPreferences.edit();
         editor.putBoolean(MusicContacts.PREF_SERVICE_ALIVE, mServiceAlive);
-        editor.putBoolean(MusicContacts.PREF_MUSIC_PLAYING, mService.isMediaPlaying());
         editor.apply();
         super.onDestroy();
     }
@@ -516,6 +531,10 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
 
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
+        if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
+            getSupportFragmentManager().popBackStack();
+        }
+
         super.onSaveInstanceState(outState);
         outState.putParcelableArrayList(KEY_LIST_SONG, (ArrayList<? extends Parcelable>) mListSong);
         outState.putParcelableArrayList(KEY_FAV_SONG, (ArrayList<? extends Parcelable>) mFavListSong);
@@ -526,6 +545,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
         outState.putBoolean(MusicContacts.PREF_SERVICE_ALIVE, mServiceAlive);
         outState.putBoolean(KEY_APP_STARTED, mIsAppStarted);
         outState.putInt(KEY_CHECK_INDEX, mCheckIndex);
+        outState.putBoolean(KEY_CHECK_FAV_FRAG, mIsFavFragOnScreen);
     }
 
     /* Recreate with the existed fragment, so that it can move from a different container to another container
@@ -806,6 +826,10 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
 
     @Override
     public void playNextSong() {
+        if (mMediaPlaybackFragment != null) {
+            mMediaPlaybackFragment.resetListener();
+        }
+
         if (getSupportFragmentManager().findFragmentByTag(FavoriteSongsFragment.FRAGMENT_TAG) != null) {
             mFavoriteSongsFragment.nextSong();
         } else {
@@ -820,9 +844,15 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
 
     @Override
     public void playPreviousSong() {
+        if (mMediaPlaybackFragment != null) {
+            mMediaPlaybackFragment.resetListener();
+        }
         if (mService != null) {
             if (mService.getCurrentTimeSong() > 3000) {
                 mService.seekPlayTimeTo(0);
+                if (mMediaPlaybackFragment != null) {
+                    mMediaPlaybackFragment.setListener();
+                }
             } else {
                 if (getSupportFragmentManager().findFragmentByTag(FavoriteSongsFragment.FRAGMENT_TAG) != null) {
                     mFavoriteSongsFragment.previousSong();
@@ -965,6 +995,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
                 playMusic(mIndexCurrentSong);
             }
         }
+        Log.d("MinhNTn", "display: " + getSupportFragmentManager().getBackStackEntryCount());
     }
 
     @Override
@@ -1015,7 +1046,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
                 song.setFavLevel(2);
                 song.setIsFavorite(true);
                 song.setDislike(false);
-                if (mFavoriteSongsFragment != null) {
+                if (getSupportFragmentManager().findFragmentByTag(FavoriteSongsFragment.FRAGMENT_TAG) != null) {
                     if (!mFavListSong.contains(song)) {
                         mFavListSong.add(song);
                         mFavoriteSongsFragment.setAdapterIndex(mFavListSong.size() -1);
@@ -1037,7 +1068,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
                     mFavListSong.remove(song);
                 }
                 mService.setIsSongPlayInList(false);
-                if (mFavoriteSongsFragment != null) {
+                if (getSupportFragmentManager().findFragmentByTag(FavoriteSongsFragment.FRAGMENT_TAG) != null) {
                     mFavoriteSongsFragment.notifyAdapter();
                     mFavoriteSongsFragment.setCurrentIndexSong(-1);
                     mFavoriteSongsFragment.resetAdapterIndex();
@@ -1108,7 +1139,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
                 if (mService != null) {
                     mService.setIsSongPlayInList(false);
                 }
-                if (mFavoriteSongsFragment != null) {
+                if (getSupportFragmentManager().findFragmentByTag(FavoriteSongsFragment.FRAGMENT_TAG) != null) {
                     mFavoriteSongsFragment.notifyAdapter();
                     mFavoriteSongsFragment.setCurrentIndexSong(-1);
                     mFavoriteSongsFragment.resetAdapterIndex();

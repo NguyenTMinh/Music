@@ -139,12 +139,14 @@ public class MediaPlaybackFragment extends Fragment {
            mSBSongProgress = mRootView.findViewById(R.id.sb_progress);
            ImageButton mIBForward = mRootView.findViewById(R.id.bt_fwd);
            mIBForward.setOnClickListener(v -> {
+               mIsActive = false;
                if (mICommunicate.isSongOnList()) {
                    mICommunicate.playNextSong();
                }
            });
            ImageButton mIBPrevious = mRootView.findViewById(R.id.bt_rew);
            mIBPrevious.setOnClickListener(v -> {
+               mIsActive = false;
                if (mICommunicate.isSongOnList()) {
                    mICommunicate.playPreviousSong();
                }
@@ -260,39 +262,7 @@ public class MediaPlaybackFragment extends Fragment {
             mTBLike.setChecked(mCurrentSong.isFavorite());
             mTBDislike.setChecked(mCurrentSong.isDislike());
         }
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                mTBLike.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                    @Override
-                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                        Log.d("MinhNTn", "onCheckedChanged:like " + isChecked);
-                        if (isChecked) {
-                            if (mTBDislike.isChecked()) {
-                                mIsActive = false;
-                                mTBDislike.setChecked(false);
-                            }
-                        }
-                        mICommunicate.updateOnLikeButton(mCurrentSong.getID(), isChecked, ActivityMusic.UPDATE_FROM_FRAG, mIsActive);
-                        mIsActive = true;
-                    }
-                });
-                mTBDislike.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                    @Override
-                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                        Log.d("MinhNTn", "onCheckedChanged:dis " + isChecked);
-                        if (isChecked) {
-                            if (mTBLike.isChecked()) {
-                                mIsActive = false;
-                                mTBLike.setChecked(false);
-                            }
-                        }
-                        mICommunicate.updateOnDislikeButton(mCurrentSong.getID(), isChecked, mIsActive);
-                        mIsActive = true;
-                    }
-                });
-            }
-        }, 100);
+        setListener();
 
         mTVSongNameHead.setText(mCurrentSong.getTitle());
         mTVSongAlbumHead.setText(alName);
@@ -360,5 +330,39 @@ public class MediaPlaybackFragment extends Fragment {
     public void resetListener() {
         mTBLike.setOnCheckedChangeListener(null);
         mTBDislike.setOnCheckedChangeListener(null);
+    }
+
+    public void setListener() {
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mTBLike.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        if (isChecked) {
+                            if (mTBDislike.isChecked()) {
+                                mIsActive = false;
+                                mTBDislike.setChecked(false);
+                            }
+                        }
+                        mIsActive = true;
+                        mICommunicate.updateOnLikeButton(mCurrentSong.getID(), isChecked, ActivityMusic.UPDATE_FROM_FRAG, mIsActive);
+                    }
+                });
+                mTBDislike.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        if (isChecked) {
+                            if (mTBLike.isChecked()) {
+                                mIsActive = false;
+                                mTBLike.setChecked(false);
+                            }
+                        }
+                        mIsActive = true;
+                        mICommunicate.updateOnDislikeButton(mCurrentSong.getID(), isChecked, mIsActive);
+                    }
+                });
+            }
+        }, 100);
     }
 }
