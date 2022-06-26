@@ -6,7 +6,7 @@ import com.minhntn.music.model.Song;
 public interface ICommunicate {
     void transition(int position);
     void hideActionBar();
-    void passCurrentPositionIfPortrait(int position);
+    void passCurrentPositionIfPortrait();
     void playMusic(int position);
     void pauseMusic(boolean fromService);
     void resumeMusic(boolean fromService);

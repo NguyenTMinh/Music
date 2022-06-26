@@ -158,6 +158,9 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        if (getSupportFragmentManager().findFragmentByTag(FavoriteSongsFragment.FRAGMENT_TAG) != null) {
+            getSupportFragmentManager().popBackStack();
+        }
 
         // Init values
         intent = new Intent(ActivityMusic.this, MediaPlaybackService.class);
@@ -261,9 +264,6 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mMediaPlaybackFragment,
                     MediaPlaybackFragment.FRAGMENT_TAG).commit();
             if (mIsFavFragOnScreen) {
-                Log.d("MinhNTn", "onCreate: here " + getSupportFragmentManager().getBackStackEntryCount()
-                        + "," + getSupportFragmentManager().findFragmentByTag(AllSongsFragment.FRAGMENT_TAG)
-                        + "," + getSupportFragmentManager().findFragmentByTag(FavoriteSongsFragment.FRAGMENT_TAG));
                 getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container_1, mAllSongsFragment,
                         AllSongsFragment.FRAGMENT_TAG).commitNow();
                 getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container_1, mFavoriteSongsFragment,
@@ -508,9 +508,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
     protected void onResume() {
         super.onResume();
         if (mIndexCurrentSong != -1) {
-            if (getSupportFragmentManager().findFragmentByTag(FavoriteSongsFragment.FRAGMENT_TAG) == null) {
-                onResumeFromBackScreen();
-            }
+            onResumeFromBackScreen();
         }
     }
 
@@ -531,10 +529,6 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
 
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
-        if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
-            getSupportFragmentManager().popBackStack();
-        }
-
         super.onSaveInstanceState(outState);
         outState.putParcelableArrayList(KEY_LIST_SONG, (ArrayList<? extends Parcelable>) mListSong);
         outState.putParcelableArrayList(KEY_FAV_SONG, (ArrayList<? extends Parcelable>) mFavListSong);
@@ -585,8 +579,13 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
 
     public void onResumeFromBackScreen() {
         mIsFromPause = true;
-        displayControlMedia(mIndexCurrentSong, true, AllSongsFragment.FRAGMENT_TAG);
-        mAllSongsFragment.onResumeFromScreen(mIndexCurrentSong);
+        if (getSupportFragmentManager().findFragmentByTag(FavoriteSongsFragment.FRAGMENT_TAG) != null) {
+            displayControlMedia(mIndexCurrentSong, true, FavoriteSongsFragment.FRAGMENT_TAG);
+            mFavoriteSongsFragment.onResumeFromScreen(mIndexCurrentSong);
+        } else {
+            displayControlMedia(mIndexCurrentSong, true, AllSongsFragment.FRAGMENT_TAG);
+            mAllSongsFragment.onResumeFromScreen(mIndexCurrentSong);
+        }
     }
 
     private Bundle getArgumentsSetToFrag() {
@@ -637,17 +636,22 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
      * @return position in that list
      */
     private int getPositionFromID(int id, String forFrag) {
-        if (forFrag.equals(FavoriteSongsFragment.FRAGMENT_TAG)) {
-            for (int i = 0; i < mFavListSong.size(); i++) {
-                if (mFavListSong.get(i).getID() == id) {
-                    return i;
+        switch (forFrag) {
+            case FavoriteSongsFragment.FRAGMENT_TAG: {
+                for (int i = 0; i < mFavListSong.size(); i++) {
+                    if (mFavListSong.get(i).getID() == id) {
+                        return i;
+                    }
                 }
+                break;
             }
-        } else {
-            for (int i = 0; i < mListSong.size(); i++) {
-                if (mListSong.get(i).getID() == id) {
-                    return i;
+            case AllSongsFragment.FRAGMENT_TAG: {
+                for (int i = 0; i < mListSong.size(); i++) {
+                    if (mListSong.get(i).getID() == id) {
+                        return i;
+                    }
                 }
+                break;
             }
         }
         return -1;
@@ -658,10 +662,9 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
      */
     @Override
     public void transition(int position) {
+
         mIndexCurrentSong = position;
         SharedPreferences.Editor editor = mSharedPreferences.edit();
-        editor.putInt(MusicContacts.PREF_SONG_CURRENT, mIndexCurrentSong);
-        editor.apply();
 
         Bundle bundle = getArgumentsSetToFrag();
         final Song song;
@@ -682,6 +685,8 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
         }
 
         song = song1;
+        editor.putInt(MusicContacts.PREF_SONG_CURRENT, getPositionFromID(song.getID(), AllSongsFragment.FRAGMENT_TAG));
+        editor.apply();
         FragmentManager fragManager = getSupportFragmentManager();
 
         if (mIsLand) {
@@ -719,10 +724,22 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
     }
 
     @Override
-    public void passCurrentPositionIfPortrait(int position) {
+    public void passCurrentPositionIfPortrait() {
         SharedPreferences.Editor editor = mSharedPreferences.edit();
-        editor.putInt(MusicContacts.PREF_SONG_CURRENT, mIndexCurrentSong);
-        editor.apply();
+        if (mIndexCurrentSong == -1) {
+            editor.putInt(MusicContacts.PREF_SONG_CURRENT, mIndexCurrentSong);
+            editor.apply();
+        } else {
+            int index;
+            if (getSupportFragmentManager().findFragmentByTag(FavoriteSongsFragment.FRAGMENT_TAG) != null) {
+                index = getPositionFromID(mFavListSong.get(mIndexCurrentSong).getID(), AllSongsFragment.FRAGMENT_TAG);
+            } else {
+                index = mIndexCurrentSong;
+            }
+            editor.putInt(MusicContacts.PREF_SONG_CURRENT, index);
+            editor.apply();
+        }
+
         if (mMediaPlaybackFragment != null) {
             if (mMediaPlaybackFragment.getContext() != null) {
                 Bundle bundle = getArgumentsSetToFrag();
@@ -909,6 +926,9 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
         if (mAllSongsFragment.getContext() != null) {
             mAllSongsFragment.setButtonState(!state);
         }
+        if (mFavoriteSongsFragment.getContext() != null) {
+            mFavoriteSongsFragment.setButtonState(!state);
+        }
     }
 
     @Override
@@ -967,7 +987,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
                     new DBAsyncTask().execute(currentSong.getID());
                 }
             }
-            passCurrentPositionIfPortrait(position);
+            passCurrentPositionIfPortrait();
         } else {
             if (fromFrag.equals(FavoriteSongsFragment.FRAGMENT_TAG)) {
                 Song currentSong = mFavListSong.get(mIndexCurrentSong);
@@ -995,7 +1015,6 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
                 playMusic(mIndexCurrentSong);
             }
         }
-        Log.d("MinhNTn", "display: " + getSupportFragmentManager().getBackStackEntryCount());
     }
 
     @Override
