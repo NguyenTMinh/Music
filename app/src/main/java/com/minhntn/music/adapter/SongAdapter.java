@@ -137,7 +137,7 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
 
                 Song songCurrent = mListSong.get(mIndex);
                 mICallBack.setStatePlay(true);
-                mICallBack.displayNowPlayingView(mIndex, true);
+                mICallBack.displayNowPlayingView(mIndex);
                 songCurrent.setPlaying(true);
 
                 mTVOrderNumber.setText("");
@@ -173,7 +173,7 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
         Song songCurrent = mListSong.get(mIndex);
         songCurrent.setPlaying(true);
         mICallBack.setStatePlay(true);
-        mICallBack.displayNowPlayingView(mIndex, true);
+        mICallBack.displayNowPlayingView(mIndex);
         notifyItemChanged(mIndex);
     }
 
@@ -191,7 +191,7 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
         Song songCurrent = mListSong.get(mIndex);
         songCurrent.setPlaying(true);
         mICallBack.setStatePlay(true);
-        mICallBack.displayNowPlayingView(mIndex, true);
+        mICallBack.displayNowPlayingView(mIndex);
         notifyItemChanged(mIndex);
     }
 
@@ -205,12 +205,16 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
         Song songCurrent = mListSong.get(mIndex);
         songCurrent.setPlaying(true);
         mICallBack.setStatePlay(true);
-        mICallBack.displayNowPlayingView(mIndex, true);
+        mICallBack.displayNowPlayingView(mIndex);
         notifyItemChanged(mIndex);
     }
 
     public void setIsClickedOnItem(boolean mIsClickedOnItem) {
         this.mIsClickedOnItem = mIsClickedOnItem;
+    }
+
+    public int getmIndex() {
+        return mIndex;
     }
 
 }

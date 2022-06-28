@@ -1,6 +1,8 @@
 package com.minhntn.music.frag;
 
+import android.content.ContentValues;
 import android.content.Context;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -67,7 +69,7 @@ public abstract class BaseSongListFragment extends Fragment implements ICallBack
 
             if (!mIsLand && savedInstanceState != null) {
                 if (mListSong != null) {
-                    displayNowPlayingView(mCurrentIndexSong, true);
+                    displayNowPlayingView(mCurrentIndexSong);
                 }
             }
 
@@ -91,9 +93,9 @@ public abstract class BaseSongListFragment extends Fragment implements ICallBack
     }
 
     @Override
-    public void displayNowPlayingView(int position, boolean isClicked) {
+    public void displayNowPlayingView(int position) {
         mCurrentIndexSong = position;
-        mICommunicate.displayControlMedia(position, isClicked, getFragTag());
+        mICommunicate.displayControlMedia(position, getFragTag());
     }
 
     @Override
@@ -107,7 +109,7 @@ public abstract class BaseSongListFragment extends Fragment implements ICallBack
     public void increaseCount() {
         if (mCurrentIndexSong != -1) {
             mListSong.get(mCurrentIndexSong).setCountOfPlay();
-            mICommunicate.updateCountPlay(mListSong.get(mCurrentIndexSong).getID());
+            updateCount(mListSong.get(mCurrentIndexSong).getID());
         }
     }
 
@@ -197,6 +199,29 @@ public abstract class BaseSongListFragment extends Fragment implements ICallBack
         }
     }
 
+    public void updateCount(int id) {
+        if (getContext() != null) {
+            ContentValues values = new ContentValues();
+            Uri newUri = Uri.parse(MusicContacts.CONTENT_URI.toString() + "/" + id);
+            Song song = mListSong.get(mCurrentIndexSong);
+
+            values.put(MusicContacts.FAVORITE_COLUMN_COUNT_OF_PLAY, song.getCountOfPlay());
+            if (song.getCountOfPlay() >= 3) {
+                if (!song.isDislike()) {
+                    song.setFavLevel(2);
+                    song.setIsFavorite(true);
+                }
+            }
+            values.put(MusicContacts.FAVORITE_COLUMN_IS_FAVORITE, song.getFavLevel());
+            int row = getContext().getContentResolver().update(newUri, values, null, null);
+            mICommunicate.updateCountPlayDatabase(row, song);
+        }
+    }
+
+    /**
+     * Smooth scroll to position of item in recyclerview
+     * @param position: the position scroll to
+     */
     public void onResumeFromScreen(int position) {
         mRVSongs.smoothScrollToPosition(position);
     }

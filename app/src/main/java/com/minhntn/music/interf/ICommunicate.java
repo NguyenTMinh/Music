@@ -20,19 +20,18 @@ public interface ICommunicate {
     void setStatePlaying(boolean state);
     void setModePlay(int modePlay);
     void setPauseButton(boolean state);
-    void displayControlMedia(int position, boolean isClicked, String fromFrag);
+    void displayControlMedia(int position, String fromFrag);
     void setIsFromPause(boolean fromPause);
     boolean isSongOnList();
-    void setSongOnList(boolean onList);
 
     // Control service
     void startService();
 
     // update fav table
-    void updateOnLikeButton(int id, boolean isChecked, int index, boolean active);
-    void updateCountPlay(int id);
-    void updateOnDislikeButton(int id, boolean isChecked, boolean active);
-    void removeFavorite(int id);
-    void removeFromDatabase(int id);
+    void updateOnAddingNewFavorite(int rowCount, Song currentSong, String keyFrag);
+    void updateCountPlayDatabase(int rowCount, Song currentSong);
+    void updateOnDislikeButton(int rowCount, Song song);
+    void updateRemoveFavorite(int rowCount, int index, Song songToChange, boolean isRemoveItemPlaying);
+    void removeFromDatabase(int rowCount, Song song);
 
 }

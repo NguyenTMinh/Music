@@ -129,7 +129,7 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
         createNotificationChannel();
         mSongList = intent.getParcelableArrayListExtra(ActivityMusic.KEY_LIST_SONG);
         Notification notification = getNotificationBuilder(null, null, null).build();
-
+        Log.d("MinhNTn", "onStartCommand: " + mSongList);
         startForeground(NOTIFICATION_ID, notification);
         return START_NOT_STICKY;
     }
@@ -138,6 +138,7 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
     @Override
     public IBinder onBind(Intent intent) {
         mSongList = intent.getParcelableArrayListExtra(ActivityMusic.KEY_LIST_SONG);
+        Log.d("MinhNTn", "onBind: " + mSongList);
         return mBinder;
     }
 
@@ -344,6 +345,7 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
 
     public void setSongList(List<Song> list) {
         mSongList = list;
+        Log.d("MinhNTn", "setSongList: " + mSongList);
     }
 
     private void updateNotification() {
@@ -385,9 +387,14 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
         }
         return null;
     }
-
     public Song getExactSong() {
         return mCurrentSong;
+    }
+
+    public void removeSong(Song song) {
+        Log.d("MinhNTn", "removeSong: " + mSongList);
+        Log.d("MinhNTn", "removeSong: " + mSongList.contains(song));
+        mSongList.remove(song);
     }
 
     class MediaBroadcastReceiver extends BroadcastReceiver {
@@ -426,19 +433,21 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
             super.onPostExecute(cursor);
 
             Song song = mSongList.get(mCurrentSongIndex);
-            cursor.moveToFirst();
-            String albumName = cursor.getString(0);
-            byte[] albumCover = cursor.getBlob(1);
+            if (cursor != null) {
+                cursor.moveToFirst();
+                String albumName = cursor.getString(0);
+                byte[] albumCover = cursor.getBlob(1);
 
-            Bitmap bitmap = BitmapFactory.decodeByteArray(albumCover, 0, albumCover.length);
-            NotificationCompat.Builder builder = getNotificationBuilder(bitmap, song.getmArtist(), song.getTitle());
+                Bitmap bitmap = BitmapFactory.decodeByteArray(albumCover, 0, albumCover.length);
+                NotificationCompat.Builder builder = getNotificationBuilder(bitmap, song.getmArtist(), song.getTitle());
 
-            remoteViewsDefault.setInt(R.id.ib_play_pause_notification, "setImageLevel",
-                    mButtonState);
-            remoteViewsBig.setInt(R.id.ib_play_pause_notification, "setImageLevel",
-                    mButtonState);
+                remoteViewsDefault.setInt(R.id.ib_play_pause_notification, "setImageLevel",
+                        mButtonState);
+                remoteViewsBig.setInt(R.id.ib_play_pause_notification, "setImageLevel",
+                        mButtonState);
 
-            mNotificationManager.notify(NOTIFICATION_ID, builder.build());
+                mNotificationManager.notify(NOTIFICATION_ID, builder.build());
+            }
         }
     }
 }

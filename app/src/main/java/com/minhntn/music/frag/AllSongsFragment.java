@@ -1,10 +1,13 @@
 package com.minhntn.music.frag;
 
+import android.content.ContentValues;
+import android.net.Uri;
 import android.util.Log;
 
 import com.minhntn.music.ActivityMusic;
 import com.minhntn.music.R;
 import com.minhntn.music.model.Song;
+import com.minhntn.music.prov.MusicContacts;
 
 public class AllSongsFragment extends BaseSongListFragment {
     public static final String FRAGMENT_TAG = "AllSongsFragment";
@@ -24,13 +27,40 @@ public class AllSongsFragment extends BaseSongListFragment {
     @Override
     public void updateSong(int index, String action) {
         if (action.equals(ACTION_ADD_FAVORITE)) {
-            mICommunicate.updateOnLikeButton(mListSong.get(index).getID(), true, index, true);
+            updateOnAddFavorite(mListSong.get(index));
         } else {
             if (index < mCurrentIndexSong) {
                 mCurrentIndexSong--;
+                mSongAdapter.setIndex(mSongAdapter.getmIndex()-1);
             }
-            mICommunicate.removeFromDatabase(mListSong.get(index).getID());
+            removeSongFromDatabase(mListSong.get(index), index);
         }
     }
 
+    private void updateOnAddFavorite(Song currentSong) {
+        if (getContext() != null) {
+            ContentValues values = new ContentValues();
+            Uri newUri = Uri.parse(MusicContacts.CONTENT_URI.toString() + "/" + currentSong.getID());
+
+            currentSong.setFavLevel(2);
+            currentSong.setIsFavorite(true);
+            currentSong.setDislike(false);
+
+            values.put(MusicContacts.FAVORITE_COLUMN_IS_FAVORITE, currentSong.getFavLevel());
+            int row = getContext().getContentResolver().update(newUri, values, null, null);
+            mICommunicate.updateOnAddingNewFavorite(row, currentSong, FRAGMENT_TAG);
+        }
+    }
+
+    private void removeSongFromDatabase(Song songToChange, int index) {
+        if (getContext() != null) {
+            Uri newUri = Uri.parse(MusicContacts.CONTENT_URI.toString() + "/" + songToChange.getID());
+            int row = getContext().getContentResolver().delete(newUri, null, null);
+
+            Log.d("MinhNTn", "removeSongFromDatabase: " + mListSong);
+            mICommunicate.removeFromDatabase(row, songToChange);
+            mListSong.remove(songToChange);
+            notifyAdapter();
+        }
+    }
 }

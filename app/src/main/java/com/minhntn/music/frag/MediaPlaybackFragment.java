@@ -1,8 +1,10 @@
 package com.minhntn.music.frag;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
@@ -139,14 +141,12 @@ public class MediaPlaybackFragment extends Fragment {
            mSBSongProgress = mRootView.findViewById(R.id.sb_progress);
            ImageButton mIBForward = mRootView.findViewById(R.id.bt_fwd);
            mIBForward.setOnClickListener(v -> {
-               mIsActive = false;
                if (mICommunicate.isSongOnList()) {
                    mICommunicate.playNextSong();
                }
            });
            ImageButton mIBPrevious = mRootView.findViewById(R.id.bt_rew);
            mIBPrevious.setOnClickListener(v -> {
-               mIsActive = false;
                if (mICommunicate.isSongOnList()) {
                    mICommunicate.playPreviousSong();
                }
@@ -226,7 +226,7 @@ public class MediaPlaybackFragment extends Fragment {
             mTimer.cancel();
         }
         if (getActivity() != null) {
-            ((ActivityMusic) getActivity()).setCurrentPlayMode(mCurrentPlayMode);
+            ((ActivityMusic) getActivity()).setModePlay(mCurrentPlayMode);
         }
         super.onPause();
     }
@@ -263,7 +263,6 @@ public class MediaPlaybackFragment extends Fragment {
             mTBDislike.setChecked(mCurrentSong.isDislike());
         }
         setListener();
-
         mTVSongNameHead.setText(mCurrentSong.getTitle());
         mTVSongAlbumHead.setText(alName);
         mTVSongDuration.setText(mCurrentSong.getDurationTimeFormat());
@@ -345,8 +344,8 @@ public class MediaPlaybackFragment extends Fragment {
                                 mTBDislike.setChecked(false);
                             }
                         }
+                        updateOnLikeButton(isChecked);
                         mIsActive = true;
-                        mICommunicate.updateOnLikeButton(mCurrentSong.getID(), isChecked, ActivityMusic.UPDATE_FROM_FRAG, mIsActive);
                     }
                 });
                 mTBDislike.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -358,11 +357,61 @@ public class MediaPlaybackFragment extends Fragment {
                                 mTBLike.setChecked(false);
                             }
                         }
+                        updateOnDislikeButton(isChecked);
                         mIsActive = true;
-                        mICommunicate.updateOnDislikeButton(mCurrentSong.getID(), isChecked, mIsActive);
                     }
                 });
             }
         }, 100);
+    }
+
+    private void updateOnLikeButton(boolean isChecked) {
+        if (getContext() != null && mIsActive) {
+            ContentValues values = new ContentValues();
+            Uri newUri = Uri.parse(MusicContacts.CONTENT_URI.toString() + "/" + mCurrentSong.getID());
+
+            if (isChecked) {
+                mCurrentSong.setFavLevel(2);
+                mCurrentSong.setIsFavorite(true);
+                mCurrentSong.setDislike(false);
+            } else {
+                mCurrentSong.setFavLevel(0);
+                mCurrentSong.setIsFavorite(false);
+                mCurrentSong.resetCountOfPlay();
+            }
+
+            values.put(MusicContacts.FAVORITE_COLUMN_IS_FAVORITE, mCurrentSong.getFavLevel());
+            int row = getContext().getContentResolver().update(newUri, values, null, null);
+            mICommunicate.updateOnAddingNewFavorite(row, mCurrentSong, FRAGMENT_TAG);
+        }
+    }
+
+    private void updateOnDislikeButton(boolean isChecked) {
+        if (getContext() != null && mIsActive) {
+            ContentValues values = new ContentValues();
+            Uri newUri = Uri.parse(MusicContacts.CONTENT_URI.toString() + "/" + mCurrentSong.getID());
+
+            if (isChecked) {
+                mCurrentSong.resetCountOfPlay();
+                mCurrentSong.setDislike(true);
+                mCurrentSong.setFavLevel(1);
+                mCurrentSong.setIsFavorite(false);
+            } else {
+                mCurrentSong.setFavLevel(0);
+                mCurrentSong.setDislike(false);
+            }
+
+            values.put(MusicContacts.FAVORITE_COLUMN_IS_FAVORITE, mCurrentSong.getFavLevel());
+            int row = getContext().getContentResolver().update(newUri, values, null, null);
+            mICommunicate.updateOnDislikeButton(row, mCurrentSong);
+        }
+    }
+
+    public boolean getTBLikeState() {
+        return mTBLike.isChecked();
+    }
+
+    public boolean getTBDislikeState() {
+        return mTBDislike.isChecked();
     }
 }
