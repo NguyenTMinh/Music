@@ -137,8 +137,6 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-        mSongList = intent.getParcelableArrayListExtra(ActivityMusic.KEY_LIST_SONG);
-        Log.d("MinhNTn", "onBind: " + mSongList);
         return mBinder;
     }
 
@@ -156,6 +154,7 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
      * @param position
      */
     public void playSong(int position) {
+        Log.d("MinhNTn", "playSong: " + mSongList);
         mIsSongPlayInList = true;
         // Check the index of song should be played
         if (position >= 0) {
@@ -345,7 +344,6 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
 
     public void setSongList(List<Song> list) {
         mSongList = list;
-        Log.d("MinhNTn", "setSongList: " + mSongList);
     }
 
     private void updateNotification() {
@@ -392,8 +390,6 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
     }
 
     public void removeSong(Song song) {
-        Log.d("MinhNTn", "removeSong: " + mSongList);
-        Log.d("MinhNTn", "removeSong: " + mSongList.contains(song));
         mSongList.remove(song);
     }
 

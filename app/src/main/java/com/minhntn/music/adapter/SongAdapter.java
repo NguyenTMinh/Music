@@ -96,12 +96,14 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
                 @Override
                 public boolean onMenuItemClick(MenuItem item) {
                     if (mResMenu == R.menu.item_menu_all_songs) {
+                        Log.d("MinhNTn", "onMenuItemClick: " + mIndex + "," + getAdapterPosition());
                         switch (item.getItemId()) {
                             case R.id.remove_list: {
-                                mICallBack.updateSong(getAdapterPosition(), AllSongsFragment.ACTION_DELETE_SONG);
                                 if (getAdapterPosition() < mIndex) {
                                     mIndex--;
                                 }
+                                mICallBack.updateSong(getAdapterPosition(), AllSongsFragment.ACTION_DELETE_SONG);
+                                Log.d("MinhNTn", "onMenuItemClick: " + mIndex);
                                 break;
                             }
                             case R.id.add_fav: {
@@ -110,6 +112,7 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
                                 break;
                             }
                         }
+                        Log.d("MinhNTn", "onMenuItemClick: " + mIndex);
                     } else {
                         if (item.getItemId() == R.id.remove_fav) {
                             // Decrease index if the song remove has position lower than the current song playing
@@ -127,6 +130,7 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
 
         @Override
         public void onClick(View v) {
+            Log.d("MinhNTn", "onClick1: " + mIndex);
             if (v.getId() == itemView.getId()) {
                 if (mIndex != -1) {
                     Song song = mListSong.get(mIndex);
@@ -155,6 +159,7 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
             if (v.getId() == R.id.bt_song_item_menu) {
                 popupMenu.show();
             }
+            Log.d("MinhNTn", "onClick2: " + mIndex);
         }
 
     }

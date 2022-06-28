@@ -31,7 +31,6 @@ public class AllSongsFragment extends BaseSongListFragment {
         } else {
             if (index < mCurrentIndexSong) {
                 mCurrentIndexSong--;
-                mSongAdapter.setIndex(mSongAdapter.getmIndex()-1);
             }
             removeSongFromDatabase(mListSong.get(index), index);
         }
@@ -49,6 +48,7 @@ public class AllSongsFragment extends BaseSongListFragment {
             values.put(MusicContacts.FAVORITE_COLUMN_IS_FAVORITE, currentSong.getFavLevel());
             int row = getContext().getContentResolver().update(newUri, values, null, null);
             mICommunicate.updateOnAddingNewFavorite(row, currentSong, FRAGMENT_TAG);
+            Log.d("MinhNTn", "updateOnAddFavorite: " + mSongAdapter.getmIndex());
         }
     }
 
@@ -57,7 +57,6 @@ public class AllSongsFragment extends BaseSongListFragment {
             Uri newUri = Uri.parse(MusicContacts.CONTENT_URI.toString() + "/" + songToChange.getID());
             int row = getContext().getContentResolver().delete(newUri, null, null);
 
-            Log.d("MinhNTn", "removeSongFromDatabase: " + mListSong);
             mICommunicate.removeFromDatabase(row, songToChange);
             mListSong.remove(songToChange);
             notifyAdapter();

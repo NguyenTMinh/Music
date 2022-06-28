@@ -439,7 +439,7 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
                 }
             } else {
                 ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE,Manifest.permission.WRITE_EXTERNAL_STORAGE },
+                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
                         REQUEST_CODE);;
             }
         }
@@ -818,12 +818,6 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
 
     @Override
     public void startService() {
-//        if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
-//            intent.putParcelableArrayListExtra(KEY_LIST_SONG, (ArrayList<? extends Parcelable>) mFavListSong);
-//        } else {
-//            intent.putParcelableArrayListExtra(KEY_LIST_SONG, (ArrayList<? extends Parcelable>) mListSong);
-//        }
-        Log.d("MinhNTn", "startService: " + mListSong);
         startService(intent);
         if (mService != null) {
             mService.setSongList(mListSong);
@@ -1165,7 +1159,6 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
 
     @Override
     public void removeFromDatabase(int rowCount, Song song) {
-        Log.d("MinhNTn", "Act " + mListSong);
         String whereClause = MusicContacts.SONG_COLUMN_ID + " = ?";
         String[] selectionArgs = new String[] {String.valueOf(song.getID())};
 
