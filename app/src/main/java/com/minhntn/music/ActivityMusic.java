@@ -1001,17 +1001,19 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
             }
             passCurrentPositionIfPortrait();
         } else {
-            if (fromFrag.equals(FavoriteSongsFragment.FRAGMENT_TAG)) {
-                Song currentSong = mFavListSong.get(mIndexCurrentSong);
+            if (fromFrag.equals(AllSongsFragment.FRAGMENT_TAG)) {
+                mCurrentSong = mListSong.get(mIndexCurrentSong);
+            } else {
+                mCurrentSong = mFavListSong.get(mIndexCurrentSong);
                 if (mAllSongsFragment.getCurrentIndexSong() != -1) {
                     if (mListSong.get(mAllSongsFragment.getCurrentIndexSong()).getID()
-                            != currentSong.getID()) {
+                            != mCurrentSong.getID()) {
                         mListSong.get(mAllSongsFragment.getCurrentIndexSong()).setPlaying(false);
                     }
                 }
-                if (mService != null) {
-                    mService.setIsSongPlayInList(true);
-                }
+            }
+            if (mService != null) {
+                mService.setIsSongPlayInList(true);
             }
             transition(mIndexCurrentSong);
         }
