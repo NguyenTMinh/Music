@@ -2,9 +2,7 @@ package com.minhntn.music.frag;
 
 import android.content.ContentValues;
 import android.net.Uri;
-import android.util.Log;
 
-import com.minhntn.music.ActivityMusic;
 import com.minhntn.music.R;
 import com.minhntn.music.model.Song;
 import com.minhntn.music.prov.MusicContacts;
@@ -48,7 +46,6 @@ public class AllSongsFragment extends BaseSongListFragment {
             values.put(MusicContacts.FAVORITE_COLUMN_IS_FAVORITE, currentSong.getFavLevel());
             int row = getContext().getContentResolver().update(newUri, values, null, null);
             mICommunicate.updateOnAddingNewFavorite(row, currentSong, FRAGMENT_TAG);
-            Log.d("MinhNTn", "updateOnAddFavorite: " + mSongAdapter.getmIndex());
         }
     }
 

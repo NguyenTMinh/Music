@@ -96,7 +96,6 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
                 @Override
                 public boolean onMenuItemClick(MenuItem item) {
                     if (mResMenu == R.menu.item_menu_all_songs) {
-                        Log.d("MinhNTn", "onMenuItemClick: " + mIndex + "," + getAdapterPosition());
                         switch (item.getItemId()) {
                             case R.id.remove_list: {
                                 if (getAdapterPosition() < mIndex) {

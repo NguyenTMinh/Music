@@ -33,7 +33,6 @@ import android.os.IBinder;
 import android.os.Parcelable;
 import android.provider.Settings;
 
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -725,19 +724,6 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
     @Override
     public void passCurrentPositionIfPortrait() {
         SharedPreferences.Editor editor = mSharedPreferences.edit();
-//        if (mIndexCurrentSong == -1) {
-//            editor.putInt(MusicContacts.PREF_SONG_CURRENT, mIndexCurrentSong);
-//            editor.apply();
-//        } else {
-//            int index;
-//            if (getSupportFragmentManager().findFragmentByTag(FavoriteSongsFragment.FRAGMENT_TAG) != null) {
-//                index = getPositionFromID(mFavListSong.get(mIndexCurrentSong).getID(), AllSongsFragment.FRAGMENT_TAG);
-//            } else {
-//                index = mIndexCurrentSong;
-//            }
-//            editor.putInt(MusicContacts.PREF_SONG_CURRENT, index);
-//            editor.apply();
-//        }
         editor.putInt(MusicContacts.PREF_SONG_CURRENT, getPositionFromID(mCurrentSong.getID(), AllSongsFragment.FRAGMENT_TAG));
         editor.apply();
 
@@ -787,11 +773,6 @@ public class ActivityMusic extends AppCompatActivity implements ICommunicate {
     public void resumeMusic(boolean fromService) {
         if (mIndexCurrentSong != -1) {
             if (!mServiceAlive) {
-                if (getSupportFragmentManager().findFragmentByTag(FavoriteSongsFragment.FRAGMENT_TAG) != null && mCheckIndex != -1) {
-                    intent.putParcelableArrayListExtra(KEY_LIST_SONG, (ArrayList<? extends Parcelable>) mFavListSong);
-                } else {
-                    intent.putParcelableArrayListExtra(KEY_LIST_SONG, (ArrayList<? extends Parcelable>) mListSong);
-                }
                 startService(intent);
                 mServiceAlive = true;
             }
